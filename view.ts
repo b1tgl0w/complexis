@@ -1,0 +1,856 @@
+interface Angle {
+  angle: number | undefined;
+  isCenter: boolean;
+}
+
+interface Bounds {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+interface Coord {
+  row: number;
+  col: number;
+}
+
+
+let bcw: number = 0;
+let bgcolor: string = "hsl(50, 7%, 97%)";
+let blockclocks: Array<number> = [
+  6, 9, 3, 12, 12
+]
+let blockwidth: number = 22;
+let blue: string = "hsl(200, 45%, 70%)";
+let boarddims: Coord = { row: 38, col: 25 };
+let board: Array<Array<boolean>>;
+let canvas: HTMLCanvasElement = <HTMLCanvasElement> document.getElementById('canvas');
+const clockDirections: Array<number> = [
+  12, 1, 3, 5, 6, 7, 9, 11
+];
+let colorme: string = "colorme";
+let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
+let gcw: number = 0;
+let gravityTimeout: number = 1250;
+let gravityTimer: number = gravityTimeout;
+let gray1: string = "hsl(280, 0%, 70%)";
+let gray2: string = "hsl(281, 1%, 70%)";
+let green: string = "hsl(80, 45%, 70%)";
+let highlight: string = "hsl(250, 100%, 80%)";
+let ocw: number = 0;
+let orange: string = "hsl(30, 45%, 70%)";
+let rcw: number = 0;
+let red: string = "hsl(0, 45%, 70%)";
+let sd: number = 0;
+let sl: number = 0;
+let sr: number = 0;
+let su: number = 0;
+let updateInterval: number = 150;
+let wholecoord: Coord = { row: 0, col: 0 };
+let whole: Array<Array<string>> = [
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, colorme, colorme, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, colorme, colorme, colorme, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, colorme, colorme, colorme, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor],
+  [ bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor]
+];
+let vcw: number = 0;
+let violet: string = "hsl(280, 45%, 70%)";
+let wcw: number = 0;
+let ycw: number = 0;
+let yellow: string = "hsl(50, 45%, 70%)";
+let blockcolors: Array<string> = [ red, orange, yellow, green, blue, violet, gray1, gray2 ];
+let blockcolorsset: Set<string> = new Set(blockcolors);
+
+function applyWhole() {
+  for(let i = 0; i < whole.length; ++i) {
+    for(let j = 0; j < whole[0].length; ++j) {
+      if (whole[i][j] !== bgcolor)
+        board[wholecoord.row + i][wholecoord.col + j] = true;
+    }
+  }
+  wholecoord.row = 0;
+  wholecoord.col = 0;
+  whole = newWhole();
+  colorWhole();
+}
+
+function bounds(target: Array<Array<string>>): Bounds {
+  let minx: number = 999;
+  let maxx: number = -1;
+  let miny: number = 999;
+  let maxy: number = -1;
+  for(let i: number = 0; i < target.length; ++i) {
+    for(let j: number = 0; j < target[0].length; ++j) {
+      if(target[i][j] !== bgcolor) {
+        if(j < minx)
+          minx = j;
+        if(j > maxx)
+          maxx = j;
+        if(i < miny)
+          miny = i;
+        if(i > maxy)
+          maxy = i;
+      }
+    }
+  }
+  
+  return { left: minx, right: maxx, top: miny, bottom: maxy };
+}
+
+function centerWhole(target: Array<Array<string>>) {
+  let center = getCenterCoords(target);
+
+  if (center.row < Math.floor(target.length / 2 - 1)) {
+    while(center.row < Math.floor(target.length / 2 - 1)) {
+      shiftWhole(target, 6);
+      center.row++;
+    }
+  }
+  else if (center.row > Math.floor(target.length / 2 - 1)) {
+    while (center.row > Math.floor(target.length / 2 - 1)) {
+      shiftWhole(target, 12);
+      center.row--;
+    }
+  }
+  if (center.col < Math.floor(target[0].length / 2 - 1)) {
+    while (center.col < Math.floor(target[0].length / 2 - 1)) {
+      shiftWhole(target, 3);
+      center.col++;
+    }
+  }
+  else if (center.col > Math.floor(target[0].length / 2 - 1)) {
+    while (center.col > Math.floor(target[0].length / 2 - 1)) {
+      shiftWhole(target, 9);
+      center.col--;
+    }
+  }
+}
+
+function clearBoard(): Array<Array<boolean>> {
+  let ret = new Array<Array<boolean>>();
+  for (let i = 0; i < boarddims.row; ++i) {
+    let row = new Array<boolean>();
+    for (let j = 0; j < boarddims.col; ++j) {
+      row.push(false);
+    }
+    ret.push(row);
+  }
+  return ret;
+}
+
+function clockMove(color: string, cwTrueCcwFalse: boolean) {
+  let curCoords = getCoords(color);
+  let newCoords: Coord = { row: curCoords.row, col: curCoords.col };
+   
+  let adjCoords: Array<Coord> = getAdjOccupied(curCoords);
+
+  if (adjCoords.length < 4) {
+    for (let i = 0; i < adjCoords.length; ++i) {
+      let clockDirection: number = getClockDirection(adjCoords[i], curCoords);
+      let cw: number = clockwise(cwTrueCcwFalse, clockDirection);
+      let cw2: number = clockwise(cwTrueCcwFalse, cw);
+      let step1: Coord = getPotentialCoords(adjCoords[i], cw);
+      let step1Whole: Array<Array<string>> = cloneWhole(whole);
+      step1Whole[curCoords.row][curCoords.col] = bgcolor;
+      let potentialCoords: Coord = getPotentialCoords(adjCoords[i], cw2);
+      let potentialWhole: Array<Array<string>> = cloneWhole(whole);
+      potentialWhole[curCoords.row][curCoords.col] = bgcolor;
+      potentialWhole[potentialCoords.row][potentialCoords.col] = color;
+      // TODO step1Whole should be contiguous except for the piece in motion.
+      if (isOpen(step1, whole) && isOpen(potentialCoords, whole) && contiguous(potentialCoords, potentialWhole) === true)
+        newCoords = potentialCoords;
+      else if (isOpen(potentialCoords, whole) === false || contiguous(potentialCoords, potentialWhole) === false) {
+        let clockDirectionDiag: number = getClockDirection(potentialCoords, curCoords);
+        let cwDiag: number = clockwise(cwTrueCcwFalse, clockDirectionDiag);
+        let potentialCoordsDiag: Coord = getPotentialCoords(potentialCoords, cwDiag);
+        let potentialWholeDiag: Array<Array<string>> = cloneWhole(whole);
+        potentialWholeDiag[curCoords.row][curCoords.col] = bgcolor;
+        potentialWholeDiag[potentialCoordsDiag.row][potentialCoordsDiag.col] = color;
+        if (isOpen(potentialCoordsDiag, whole) && contiguous(potentialCoordsDiag, potentialWholeDiag) === true)
+          newCoords = potentialCoordsDiag;
+      }
+    }
+  }
+
+  whole[curCoords.row][curCoords.col] = bgcolor;
+  whole[newCoords.row][newCoords.col] = color;
+}
+
+function clockwise(cw: boolean, clockDirection): number {
+  for (let i = 0; i < clockDirections.length; ++i) {
+    if (clockDirections[i] === clockDirection) {
+      if (cw === true)
+        return clockDirections[(i + 1) % clockDirections.length];
+      else {
+        if ((i - 1) === -1)
+          return clockDirections[clockDirections.length - 1];
+        else
+          return clockDirections[i - 1];
+      }
+    }
+  }
+  
+  return undefined;
+}
+
+function cloneWhole(target: Array<Array<string>>): Array<Array<string>> {
+  let ret: Array<Array<string>> = new Array<Array<string>>();
+  
+  for(let i = 0; i < target.length; ++i) {
+    ret.push(target[i].slice());
+  }
+
+  return ret;
+}
+
+
+function colorWhole() {
+  let colorindex: number = 0;
+  let r1 = randomColorMe(whole);
+  let r2 = randomColorMe(whole);
+  whole[r1.row][r1.col] = gray1;
+  whole[r2.row][r2.col] = gray2;
+  for(let i: number = 0; i < whole.length; ++i) {
+    for(let j: number = 0; j < whole[0].length; ++j) {
+      if (whole[i][j] === colorme) {
+        whole[i][j] = blockcolors[colorindex++];
+      }
+    }
+  }
+}
+
+function contiguous(startingCoord: Coord, potential: Array<Array<string>>): boolean {
+  let l: Array<Coord> = new Array<Coord>();
+  let s: Set<Coord> = new Set<Coord>();
+  l.push(startingCoord);
+
+  do {
+    let m: Coord = l.pop();
+
+    if (setHasEquality(s, m) === false)
+      s.add(m);
+
+    let y = m.row;
+    let x = m.col;
+
+    if(y - 1 > 0 && potential[y - 1][x] != bgcolor && setHasEquality(s, { row: y - 1, col: x }) === false)
+      l.push({ row: y - 1, col: x})
+    if(y + 1 < potential.length && potential[y + 1][x] != bgcolor && setHasEquality(s, { row: y + 1, col: x }) === false)
+      l.push({ row: y + 1, col: x})
+    if(x - 1 > 0 && potential[y][x - 1] != bgcolor && setHasEquality(s, { row: y, col: x - 1 }) === false)
+      l.push({ row: y, col: x - 1})
+    if(x + 1 < potential[0].length && potential[y][x + 1] != bgcolor && setHasEquality(s, { row: y, col: x + 1 }) === false)
+      l.push({ row: y, col: x + 1})
+
+  } while(l.length > 0);
+
+  return s.size == blockcolors.length;
+}
+
+function getAdjOccupied(coords: Coord): Array<Coord> {
+  let ret: Array<Coord> = new Array<Coord>();
+  
+  if (isOpen( { row: coords.row - 1, col: coords.col }, whole) === false)
+    ret.push( { row: coords.row - 1, col: coords.col} );
+  if (isOpen( { row: coords.row + 1, col: coords.col }, whole) === false)
+    ret.push( { row: coords.row + 1, col: coords.col} );
+  if (isOpen( { row: coords.row, col: coords.col - 1}, whole) === false)
+    ret.push( { row: coords.row, col: coords.col - 1} );
+  if (isOpen( { row: coords.row, col: coords.col + 1}, whole) === false)
+    ret.push( { row: coords.row, col: coords.col + 1} );
+  return ret;
+}
+
+function getCenterCoords(target: Array<Array<string>>): Coord {
+  let b = bounds(target);
+  return { row: Math.floor((b.bottom - b.top) / 2 + b.top), col: Math.floor((b.right - b.left) / 2 + b.left) };
+}
+
+function getClockDirection(center: Coord, d: Coord): number {
+  // Assumes center and d are adj.
+  if (d.row === center.row - 1) {
+    if (d.col === center.col - 1)
+      return 11;
+    if (d.col === center.col)
+      return 12;
+    if (d.col === center.col + 1)
+      return 1;
+  }
+  if (d.row === center.row) {
+    if (d.col === center.col - 1)
+      return 9;
+    if (d.col === center.col)
+      return 0;
+    if (d.col === center.col + 1)
+      return 3;
+  }
+  if (d.row === center.row + 1) {
+    if (d.col === center.col - 1)
+      return 7;
+    if (d.col === center.col)
+      return 6;
+    if (d.col === center.col + 1)
+      return 5;
+  }
+
+  return undefined;
+}
+
+function getCoords(color: string): Coord {
+  return getCoordsPotentialWhole(color, whole);
+}
+
+function getCoordsPotentialWhole(color: string, potentialWhole: Array<Array<string>> ) {
+  for(let i: number = 0; i < potentialWhole.length; ++i) {
+    for(let j: number = 0; j < potentialWhole[0].length; ++j) {
+      if(potentialWhole[i][j] === color)
+        return { row: i, col: j };
+    }
+  }
+  return { row: -1, col: -1 };
+}
+
+function getPotentialCoords(coords: Coord, clockDirection: number): Coord {
+  let y: number = coords.row;
+  let x: number = coords.col;
+
+  if (clockDirection === 12)
+    y -= 1;
+  if (clockDirection === 1) {
+    y -= 1;
+    x += 1;
+  }
+  if (clockDirection === 3)
+    x += 1;
+  if (clockDirection === 5) {
+    y += 1;
+    x += 1;
+  }
+  if (clockDirection === 6)
+    y += 1;
+  if (clockDirection === 7) {
+    y += 1;
+    x -= 1;
+  }
+  if (clockDirection === 9)
+    x -= 1;
+  if (clockDirection === 11) {
+    y -= 1;
+    x -= 1;
+  }
+
+  if (y < 0 || y >= whole.length)
+    y = undefined;
+
+  if (x < 0 || x >= whole[0].length)
+    x = undefined;
+
+  return { row: y, col: x };
+}
+
+function isOpen(coords: Coord, potentialWhole: Array<Array<string>>) {
+  if (coords.col + wholecoord.col < 0)
+    return false;
+  if (coords.col + wholecoord.col >= boarddims.col)
+    return false;
+  if (coords.row + wholecoord.row >= boarddims.row)
+    return false;
+
+  if (board[coords.row + wholecoord.row][coords.col + wholecoord.col])
+    return false;
+
+  if (potentialWhole[coords.row])
+    return potentialWhole[coords.row][coords.col] === bgcolor;
+  return false;
+}
+
+
+function kd(e: KeyboardEvent) {
+  if(e.defaultPrevented)
+    return;
+  if(e.code === "Digit1"){
+    rcw = 1;
+  }
+  if(e.code === "KeyQ"){
+    rcw = -1;
+  }
+  if(e.code === "Digit2"){
+    ocw = 1;
+  }
+  if(e.code === "KeyW"){
+    ocw = -1;
+  }
+  if(e.code === "Digit3"){
+    ycw = 1;
+  }
+  if(e.code === "KeyE"){
+    ycw = -1;
+  }
+  if(e.code === "Digit4"){
+    gcw = 1;
+  }
+  if(e.code === "KeyR"){
+    gcw = -1;
+  }
+  if(e.code === "Digit5"){
+    bcw = 1;
+  }
+  if(e.code === "KeyT"){
+    bcw = -1;
+  }
+  if(e.code === "Digit6"){
+    vcw = 1;
+  }
+  if(e.code === "KeyY"){
+    vcw = -1;
+  }
+  if(e.code === "Digit7") {
+    wcw = 1;
+  }
+  else if(e.code === "KeyU") {
+    wcw = -1;
+  }
+  if(e.code === "ArrowRight") {
+    sr = 1;
+  }
+  if(e.code === "ArrowLeft") {
+    sl = 1;
+  }
+  if(e.code === "ArrowDown") {
+    sd = 1;
+  }
+  if(e.code === "ArrowUp") {
+    su = 1;
+  }
+  //e.preventDefault(); todo put this in in release
+}
+
+function ku(e: KeyboardEvent) {
+  if(e.defaultPrevented)
+    return;
+  if(e.code === "Digit1"){
+    rcw = 0;
+  }
+  if(e.code === "KeyQ"){
+    rcw = 0;
+  }
+  if(e.code === "Digit2"){
+    ocw = 0;
+  }
+  if(e.code === "KeyW"){
+    ocw = 0;
+  }
+  if(e.code === "Digit3"){
+    ycw = 0;
+  }
+  if(e.code === "KeyE"){
+    ycw = 0;
+  }
+  if(e.code === "Digit4"){
+    gcw = 0;
+  }
+  if(e.code === "KeyR"){
+    gcw = 0;
+  }
+  if(e.code === "Digit5"){
+    bcw = 0;
+  }
+  if(e.code === "KeyT"){
+    bcw = 0;
+  }
+  if(e.code === "Digit6"){
+    vcw = 0;
+  }
+  if(e.code === "KeyY"){
+    vcw = 0;
+  }
+  if(e.code === "Digit7") {
+    wcw = 0;
+  }
+  if(e.code === "KeyU") {
+    wcw = 0;
+  }
+  if(e.code === "ArrowRight") {
+    sr = 0;
+  }
+  if(e.code === "ArrowLeft") {
+    sl = 0;
+  }
+  if(e.code === "ArrowDown") {
+    sd = 0;
+  }
+  if(e.code === "ArrowUp") {
+    su = 0;
+  }
+  //e.preventDefault(); todo put this in in release
+}
+
+function mirrorWholeHoriz(target: Array<Array<string>>) {
+  for (let i = 0; i < target.length; ++i) {
+    for (let j = 0; j < target[0].length / 2; ++j) {
+      let tmp: string = target[i][j];
+      target[i][j] = target[i][target[0].length - 1 - j];
+      target[i][target[0].length - 1 - j] = tmp;
+    }
+  }
+}
+
+function newWhole(): Array<Array<string>> {
+  let ret: Array<Array<string>> = new Array<Array<string>>();
+  let r: number = randomRange(0, 999);
+  let s: string = sample8.substring(r * 72, (r + 1) * 72 - 1);
+  for (let i = 0; i < whole.length; ++i) {
+    let row: Array<string> = new Array<string>();
+    for (let j = 0; j < whole[0].length; ++j) {
+      row.push(bgcolor);
+    }
+    ret.push(row);
+  }
+  for (let i = 0; i < 8; ++i) {
+    for(let j = 0; j < 9; ++j) {
+      if (s.charAt(i * 9 + j) === '1')
+        ret[i][j] = colorme;
+    }
+  }
+
+  centerWhole(ret);
+
+  return ret;
+}
+
+function proc() {
+  if(rcw === 1){
+    clockMove(red, true);
+  }
+  else if(rcw === -1){
+    clockMove(red, false);
+  }
+  if(ocw === 1){
+    clockMove(orange, true);
+  }
+  else if(ocw === -1){
+    clockMove(orange, false);
+  }
+  if(ycw === 1){
+    clockMove(yellow, true);
+  }
+  else if(ycw === -1){
+    clockMove(yellow, false);
+  }
+  if(gcw === 1){
+    clockMove(green, true);
+  }
+  else if(gcw === -1){
+    clockMove(green, false);
+  }
+  if(bcw === 1){
+    clockMove(blue, true);
+  }
+  else if(bcw === -1){
+    clockMove(blue, false);
+  }
+  if(vcw === 1){
+    clockMove(violet, true);
+  }
+  else if(vcw === -1){
+    clockMove(violet, false);
+  }
+  if(wcw === 1){
+    rotateWhole(true);
+  }
+  else if(wcw === -1){
+    rotateWhole(false);
+  }
+  let center = getCenterCoords(whole);
+
+  if (center.row < (whole.length / 2))
+    shiftWhole(whole, 6);
+  else if (center.row > (whole.length / 2))
+    shiftWhole(whole, 12);
+  if (center.col < (whole[0].length / 2))
+    shiftWhole(whole, 3);
+  else if (center.col > (whole[0].length / 2))
+    shiftWhole(whole, 9);
+
+  if (sr === 1) {
+    ++wholecoord.col;
+    for (let i = 0; i < whole.length; ++i) {
+      for (let j = 0; j < whole[0].length; ++j) {
+        if (whole[i][j] !== bgcolor) {
+          let color = whole[i][j];
+          whole[i][j] = bgcolor;
+          if(isOpen({ row: i, col: j}, whole) === false)
+            --wholecoord.col;
+          whole[i][j] = color;
+        }
+      }
+    }
+  }
+  if (sl === 1) {
+    --wholecoord.col;
+    for (let i = 0; i < whole.length; ++i) {
+      for (let j = 0; j < whole[0].length; ++j) {
+        if (whole[i][j] !== bgcolor) {
+          let color = whole[i][j];
+          whole[i][j] = bgcolor;
+          if(isOpen({ row: i, col: j}, whole) === false)
+            ++wholecoord.col;
+          whole[i][j] = color;
+        }
+      }
+    }
+  }
+  let apply: boolean = false;
+  if (su === 1) {
+    gravityTimer = updateInterval;
+    let hit: boolean = false;
+    while (hit === false) {
+      ++wholecoord.row;
+      for (let i = 0; i < whole.length; ++i) {
+        for (let j = 0; j < whole[0].length; ++j) {
+          if (whole[i][j] !== bgcolor) {
+            let color = whole[i][j];
+            whole[i][j] = bgcolor;
+            if(isOpen({ row: i, col: j}, whole) === false) {
+              --wholecoord.row;
+              hit = true;
+              apply = true;
+            }
+            whole[i][j] = color;
+          }
+        }
+      }
+    }
+  }
+  else if (sd === 1) {
+    gravityTimer = updateInterval;
+    ++wholecoord.row;
+    for (let i = 0; i < whole.length; ++i) {
+      for (let j = 0; j < whole[0].length; ++j) {
+        if (whole[i][j] !== bgcolor) {
+          let color = whole[i][j];
+          whole[i][j] = bgcolor;
+          if(isOpen({ row: i, col: j}, whole) === false) {
+            --wholecoord.row;
+            apply = true;
+          }
+          whole[i][j] = color;
+        }
+      }
+    }
+  }
+  else {
+    gravityTimer -= updateInterval;
+    if (gravityTimer < 0) {
+      gravityTimer += gravityTimeout;
+      ++wholecoord.row;
+      for (let i = 0; i < whole.length; ++i) {
+        for (let j = 0; j < whole[0].length; ++j) {
+          if (whole[i][j] !== bgcolor) {
+            let color = whole[i][j];
+            whole[i][j] = bgcolor;
+            if(isOpen({ row: i, col: j}, whole) === false) {
+              --wholecoord.row;
+              apply = true;
+            }
+            whole[i][j] = color;
+          }
+        }
+      }
+    }
+  }
+  if (apply === true) {
+    applyWhole();
+  }
+}
+
+function randomColorMe(potentialWhole: Array<Array<string>>): Coord {
+  let colorMes: Array<Coord> = new Array<Coord>();
+  for (let i = 0; i < potentialWhole.length; ++i) {
+    for (let j = 0; j < potentialWhole[0].length; ++j) {
+      if (potentialWhole[i][j] === colorme) {
+        colorMes.push( { row: i, col: j } );
+      }
+    }
+  }
+  return colorMes[randomRange(0, colorMes.length - 1)];
+}
+
+function randomRange(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function renderBoard() {
+  ctx.fillStyle = bgcolor;
+  ctx.fillRect(0, 0, blockwidth * boarddims.col, blockwidth * boarddims.row);
+  for(let i: number = 0; i < boarddims.row; ++i) {
+    for(let j: number = 0; j < boarddims.col; ++j) {
+      //ctx.fillStyle = board[i][j];
+      //ctx.fillRect(j * blockwidth, i * blockwidth, blockwidth - 1, blockwidth - 1);
+    }
+  }
+  for(let i: number = 0; i < whole.length; ++i) {
+    for(let j: number = 0; j < whole[0].length; ++j) {
+      if(blockcolorsset.has(whole[i][j])){
+        ctx.fillStyle = whole[i][j];
+        ctx.fillRect((wholecoord.col + j) * blockwidth, (wholecoord.row + i) * blockwidth, blockwidth - 1, blockwidth - 1);
+        ctx.fillStyle = highlight;
+        let c: number = 0;
+        for(let k: number = 0; k < blockcolors.length; ++k){
+          if(blockcolors[k] === whole[i][j])
+            c = k;
+        }
+        if(blockclocks[c] === 12)
+          ctx.fillRect((wholecoord.col + j) * blockwidth, (wholecoord.row + i) * blockwidth, blockwidth - 1, 1);
+        if(blockclocks[c] === 3)
+          ctx.fillRect((wholecoord.col + j + 1) * blockwidth - 2, (wholecoord.row + i) * blockwidth, 1, blockwidth - 1);
+        if(blockclocks[c] === 6)
+          ctx.fillRect((wholecoord.col + j) * blockwidth, (wholecoord.row + i + 1) * blockwidth - 1, blockwidth - 1, 1);
+        if(blockclocks[c] === 9)
+          ctx.fillRect((wholecoord.col + j) * blockwidth, (wholecoord.row + i) * blockwidth, 1, blockwidth - 1);
+      }
+    }
+  }
+  for(let i = 0; i < boarddims.row; ++i) {
+    for(let j = 0; j < boarddims.col; ++j) {
+      if(board[i][j]) {
+        ctx.fillStyle = gray1;
+        ctx.fillRect(j * blockwidth, i * blockwidth, blockwidth - 1, blockwidth - 1);
+      }
+    }
+  }
+}
+
+function rotateWhole(cwTrueCcwFalse: boolean) {
+  let potentialWhole: Array<Array<string>> = new Array<Array<string>>();
+  let emptyWhole: Array<Array<string>> = new Array<Array<string>>();
+  
+  for (let i = 0; i < whole.length; ++i) {
+    let row: Array<string> = new Array<string>();
+    for (let j = 0; j < whole[0].length; ++j) {
+      row.push(bgcolor);
+    }
+    potentialWhole.push(row);
+    emptyWhole.push(row.slice());
+  }
+
+  for (let i = 0; i < whole.length; ++i) {
+    for (let j = 0; j < whole[0].length; ++j) {
+      if (cwTrueCcwFalse === true)
+        potentialWhole[i][j] = whole[j][i];
+      else {
+        potentialWhole[potentialWhole.length - 1 - i][j] = whole[j][i];
+      }
+    }
+  }
+
+  if (cwTrueCcwFalse === true)
+    mirrorWholeHoriz(potentialWhole);
+
+  let open: boolean = true;
+
+  for (let i = 0; i < whole.length; ++i) {
+    for (let j = 0; j < whole[0].length; ++j) {
+      if (!isOpen( { row: i, col: j }, emptyWhole))
+        open = false;
+    }
+  }
+  
+  if (open === true) {
+    for (let i = 0; i < whole.length; ++i) {
+      for (let j = 0; j < whole[0].length; ++j) {
+        whole[i][j] = potentialWhole[i][j];
+      }
+    }
+    centerWhole(whole);
+  }
+}
+
+function setHasEquality(s: Set<Coord>, hasThis: Coord) {
+  for (let entry of s) {
+    if (entry.row === hasThis.row && entry.col === hasThis.col)
+      return true;
+  }
+  return false;
+}
+
+function shiftWhole(target: Array<Array<string>>, clockDirection: number) {
+  if (clockDirection === 12) {
+    for (let i = 0; i < target.length; ++i) {
+      for (let j = 0; j < target[0].length; ++j) {
+        if (i + 1 < target.length) {
+          target[i][j] = target[i+1][j];
+        }
+        else {
+          target[i][j] = bgcolor;
+        }
+      }
+    }
+    wholecoord.row += 1;
+  }
+  if (clockDirection === 6) {
+    for (let i = target.length - 1; i >= 0; --i) {
+      for (let j = 0; j < target[0].length; ++j) {
+        if (i - 1 >= 0) {
+          target[i][j] = target[i-1][j];
+        }
+        else {
+          target[i][j] = bgcolor;
+        }
+      }
+    }
+    wholecoord.row -= 1;
+  }
+  if (clockDirection === 3) {
+    for (let i = 0; i < target.length; ++i) {
+      for (let j = target[0].length - 1; j >= 0; --j) {
+        if (j - 1 >= 0) {
+          target[i][j] = target[i][j - 1];
+        }
+        else {
+          target[i][j] = bgcolor;
+        }
+      }
+    }
+    wholecoord.col -= 1;
+  }
+  if (clockDirection === 9) {
+    for (let i = 0; i < target.length; ++i) {
+      for (let j = 0; j < target[0].length; ++j) {
+        if (j + 1 < target[0].length) {
+          target[i][j] = target[i][j + 1];
+        }
+        else {
+          target[i][j] = bgcolor;
+        }
+      }
+    }
+    wholecoord.col += 1;
+  }
+}
+
+function update() {
+  proc();
+  renderBoard();
+}
+
+// Main
+// TODO Assert whole length and width.
+board = clearBoard();
+whole = newWhole();
+colorWhole();
+window.addEventListener("keydown", kd, true);
+window.addEventListener("keyup", ku, true);
+setInterval(() => update(), updateInterval); 

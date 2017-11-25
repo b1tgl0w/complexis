@@ -1,0 +1,3 @@
+* Check all if statements using if (someobject) to check that it's not
+undefined.
+* Blocks can reach outside the array. What I mean is, they can stack on top of each other, higher and higher until they're outside of whole's bounds.
