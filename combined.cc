@@ -7080,10 +7080,12 @@ Uint32 whole[wholeLength][whole0Length] = {
 int vcw = 0;
 Uint32 violet1 = 0xffecc6e0; //"hsl(280, 45%, 70%)";
 Uint32 violet2 = 0xffecc6e1;
+Uint32 violet3 = 0xffedc6e0;
+Uint32 violet4 = 0xffedc6e1;
 int wcw = 0;
 int ycw = 0;
 Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
-Uint32 blockcolors[7] = { red, orange, yellow, green, blue, violet1, violet2 };
+Uint32 blockcolors[9] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4 };
 
 void applyWhole();
 bool arrayHas(Uint32 ar[], int size, Uint32 element);
@@ -7331,10 +7333,19 @@ void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]) {
 
 void colorWhole() {
   int colorindex = 0;
+  int numViolet = rand() % 3 + 2;
   Coord r1 = randomColorMe(whole);
   Coord r2 = randomColorMe(whole);
   whole[r1.row][r1.col] = violet1;
   whole[r2.row][r2.col] = violet2;
+  if(numViolet > 2) {
+    Coord r3 = randomColorMe(whole);
+    whole[r3.row][r3.col] = violet3;
+  }
+  if(numViolet > 3) {
+    Coord r4 = randomColorMe(whole);
+    whole[r4.row][r4.col] = violet4;
+  }
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
       if (whole[i][j] == colorme) {
@@ -7768,7 +7779,7 @@ void renderBoard() {
   }
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
-      if(arrayHas(blockcolors, 7, whole[i][j])){ //TODO hardcoded
+      if(arrayHas(blockcolors, 9, whole[i][j])){ //TODO hardcoded
         int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
         int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
         boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
@@ -7938,6 +7949,8 @@ int main(int argc, char **argv) {
     blue = SDL_Swap32(blue);
     violet1 = SDL_Swap32(violet1);
     violet2 = SDL_Swap32(violet2);
+    violet3 = SDL_Swap32(violet3);
+    violet4 = SDL_Swap32(violet4);
     // TODO ALL OTHER COLORS
   }
   else if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {
