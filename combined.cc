@@ -7770,7 +7770,7 @@ int randomRange(int min, int max) {
 void renderBoard() {
   SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
   SDL_RenderClear(renderer);
-   boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth , bgcolor);
+  boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
   for(int i = 0; i < boardLength; ++i) {
     for(int j = 0; j < board0Length; ++j) {
       //ctx.fillStyle = board[i][j];
@@ -7807,7 +7807,7 @@ void renderBoard() {
         if(board[i][j]) {
           int boxX = boardCoord.col + j * blockwidth;
           int boxY = boardCoord.row + i * blockwidth;
-          boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
+          boxColor(renderer, boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
         }
       }
     }
