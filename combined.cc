@@ -7782,7 +7782,7 @@ void renderBoard() {
       if(arrayHas(blockcolors, 9, whole[i][j])){ //TODO hardcoded
         int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
         int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
-        boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+        boxColor(renderer, boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
       }
     }
   }
