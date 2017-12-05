@@ -31,6 +31,17 @@ Coord boardCoord;
 const int boardLength = 38;
 const int board0Length = 20;
 bool board[boardLength][board0Length]; //TODO
+const Coord buttonRedCw { .row = 922, .col = 790 };
+const Coord buttonOrangeCw { .row = 922, .col = 825 };
+const Coord buttonYellowCw { .row = 922, .col = 860 };
+const Coord buttonGreenCw { .row = 922, .col = 895 };
+const Coord buttonBlueCw { .row = 922, .col = 930 };
+const Coord buttonRedCcw { .row = 957, .col = 790 };
+const Coord buttonOrangeCcw { .row = 957, .col = 825 };
+const Coord buttonYellowCcw { .row = 957, .col = 860 };
+const Coord buttonGreenCcw { .row = 957, .col = 895 };
+const Coord buttonBlueCcw { .row = 957, .col = 930 };
+const int buttonWidth = 25;
 const int clockDirectionsLength = 8;
 const int clockDirections[clockDirectionsLength] = {
   12, 1, 3, 5, 6, 7, 9, 11
@@ -43,6 +54,9 @@ Uint32 gray1 = 0xffb2b2b2; // "hsl(280, 0%, 70%)";
 Uint32 gray2 = 0xffb3b3b2; // gray1 + 1 r.
 Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
 //let highlight: string = "hsl(250, 100%, 80%)";
+bool mouseActive = false;
+int mouseX = -1;
+int mouseY = -1;
 int noParam = 0;
 int noParam2 = 0;
 int ocw = 0;
@@ -110,6 +124,7 @@ void proc();
 Coord randomColorMe(Uint32 potentialWhole[][whole0Length]);
 int randomRange(int min, int max);
 void renderBoard();
+void renderUi();
 void rotateWhole(bool cwTrueCcwFalse);
 void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translate);
 Uint32 update(Uint32 interval, void *param);
@@ -505,55 +520,57 @@ void keyboard() {
     SDL_GetKeyboardState(NULL);
   if(state[SDL_SCANCODE_ESCAPE])
     exit(0);
-  if(state[SDL_SCANCODE_1])
-    rcw = 1;
-  if(state[SDL_SCANCODE_Q])
-    rcw = -1;
-  if((!state[SDL_SCANCODE_1] && !state[SDL_SCANCODE_Q])
-    || (state[SDL_SCANCODE_1] && state[SDL_SCANCODE_Q]))
-    rcw = 0;
-  if(state[SDL_SCANCODE_2])
-    ocw = 1;
-  if(state[SDL_SCANCODE_W])
-    ocw = -1;
-  if((!state[SDL_SCANCODE_2] && !state[SDL_SCANCODE_W])
-    || (state[SDL_SCANCODE_2] && state[SDL_SCANCODE_W]))
-    ocw = 0;
-  if(state[SDL_SCANCODE_3])
-    ycw = 1;
-  if(state[SDL_SCANCODE_E])
-    ycw = -1;
-  if((!state[SDL_SCANCODE_3] && !state[SDL_SCANCODE_E])
-    || (state[SDL_SCANCODE_3] && state[SDL_SCANCODE_E]))
-    ycw = 0;
-  if(state[SDL_SCANCODE_4])
-    gcw = 1;
-  if(state[SDL_SCANCODE_R])
-    gcw = -1;
-  if((!state[SDL_SCANCODE_4] && !state[SDL_SCANCODE_R])
-    || (state[SDL_SCANCODE_4] && state[SDL_SCANCODE_R]))
-    gcw = 0;
-  if(state[SDL_SCANCODE_5])
-    bcw = 1;
-  if(state[SDL_SCANCODE_T])
-    bcw = -1;
-  if((!state[SDL_SCANCODE_5] && !state[SDL_SCANCODE_T])
-    || (state[SDL_SCANCODE_5] && state[SDL_SCANCODE_T]))
-    bcw = 0;
-  if(state[SDL_SCANCODE_6])
-    vcw = 1;
-  if(state[SDL_SCANCODE_Y])
-    vcw = -1;
-  if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
-    || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y]))
-    vcw = 0;
-  if(state[SDL_SCANCODE_6])
-    wcw = 1;
-  if(state[SDL_SCANCODE_Y])
-    wcw = -1;
-  if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
-    || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y]))
-    wcw = 0;
+  if (mouseActive == false) {
+    if(state[SDL_SCANCODE_1])
+      rcw = 1;
+    if(state[SDL_SCANCODE_Q])
+      rcw = -1;
+    if((!state[SDL_SCANCODE_1] && !state[SDL_SCANCODE_Q])
+      || (state[SDL_SCANCODE_1] && state[SDL_SCANCODE_Q]))
+      rcw = 0;
+    if(state[SDL_SCANCODE_2])
+      ocw = 1;
+    if(state[SDL_SCANCODE_W])
+      ocw = -1;
+    if((!state[SDL_SCANCODE_2] && !state[SDL_SCANCODE_W])
+      || (state[SDL_SCANCODE_2] && state[SDL_SCANCODE_W]))
+      ocw = 0;
+    if(state[SDL_SCANCODE_3])
+      ycw = 1;
+    if(state[SDL_SCANCODE_E])
+      ycw = -1;
+    if((!state[SDL_SCANCODE_3] && !state[SDL_SCANCODE_E])
+      || (state[SDL_SCANCODE_3] && state[SDL_SCANCODE_E]))
+      ycw = 0;
+    if(state[SDL_SCANCODE_4])
+      gcw = 1;
+    if(state[SDL_SCANCODE_R])
+      gcw = -1;
+    if((!state[SDL_SCANCODE_4] && !state[SDL_SCANCODE_R])
+      || (state[SDL_SCANCODE_4] && state[SDL_SCANCODE_R]))
+      gcw = 0;
+    if(state[SDL_SCANCODE_5])
+      bcw = 1;
+    if(state[SDL_SCANCODE_T])
+      bcw = -1;
+    if((!state[SDL_SCANCODE_5] && !state[SDL_SCANCODE_T])
+      || (state[SDL_SCANCODE_5] && state[SDL_SCANCODE_T]))
+      bcw = 0;
+    if(state[SDL_SCANCODE_6])
+      vcw = 1;
+    if(state[SDL_SCANCODE_Y])
+      vcw = -1;
+    if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
+      || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y]))
+      vcw = 0;
+    if(state[SDL_SCANCODE_6])
+      wcw = 1;
+    if(state[SDL_SCANCODE_Y])
+      wcw = -1;
+    if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
+      || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y]))
+      wcw = 0;
+  }
   if(state[SDL_SCANCODE_UP])
     su = 1;
   else
@@ -574,6 +591,53 @@ void keyboard() {
     sb = 1;
   else
     sb = 0;
+
+  SDL_Event event;
+  while(SDL_PollEvent(&event)) {
+    if (event.type == SDL_MOUSEMOTION) {
+      mouseX = event.motion.x;
+      mouseY = event.motion.y;
+    }
+
+    if (mouseActive == false && event.type == SDL_MOUSEBUTTONDOWN && (event.button.state & SDL_BUTTON_LMASK) != 0) {
+      if (mouseX >= buttonRedCw.col && mouseX < buttonRedCw.col + buttonWidth
+        && mouseY >= buttonRedCw.row && mouseY < buttonRedCw.row + buttonWidth)
+        rcw = 1;
+      if (mouseX >= buttonOrangeCw.col && mouseX < buttonOrangeCw.col + buttonWidth
+        && mouseY >= buttonOrangeCw.row && mouseY < buttonOrangeCw.row + buttonWidth)
+        ocw = 1;
+      if (mouseX >= buttonYellowCw.col && mouseX < buttonYellowCw.col + buttonWidth
+        && mouseY >= buttonYellowCw.row && mouseY < buttonYellowCw.row + buttonWidth)
+        ycw = 1;
+      if (mouseX >= buttonGreenCw.col && mouseX < buttonGreenCw.col + buttonWidth
+        && mouseY >= buttonGreenCw.row && mouseY < buttonGreenCw.row + buttonWidth)
+        gcw = 1;
+      if (mouseX >= buttonBlueCw.col && mouseX < buttonBlueCw.col + buttonWidth
+        && mouseY >= buttonBlueCw.row && mouseY < buttonBlueCw.row + buttonWidth)
+        bcw = 1;
+      if (mouseX >= buttonRedCcw.col && mouseX < buttonRedCcw.col + buttonWidth
+        && mouseY >= buttonRedCcw.row && mouseY < buttonRedCcw.row + buttonWidth)
+        rcw = -1;
+      if (mouseX >= buttonOrangeCcw.col && mouseX < buttonOrangeCcw.col + buttonWidth
+        && mouseY >= buttonOrangeCcw.row && mouseY < buttonOrangeCcw.row + buttonWidth)
+        ocw = -1;
+      if (mouseX >= buttonYellowCcw.col && mouseX < buttonYellowCcw.col + buttonWidth
+        && mouseY >= buttonYellowCcw.row && mouseY < buttonYellowCcw.row + buttonWidth)
+        ycw = -1;
+      if (mouseX >= buttonGreenCcw.col && mouseX < buttonGreenCcw.col + buttonWidth
+        && mouseY >= buttonGreenCcw.row && mouseY < buttonGreenCcw.row + buttonWidth)
+        gcw = -1;
+      if (mouseX >= buttonBlueCcw.col && mouseX < buttonBlueCcw.col + buttonWidth
+        && mouseY >= buttonBlueCcw.row && mouseY < buttonBlueCcw.row + buttonWidth)
+        bcw = -1;
+      mouseActive = true;
+    }
+
+    if (mouseActive == true && event.type == SDL_MOUSEBUTTONUP) {
+      rcw = ocw = ycw = gcw = vcw = 0;
+      mouseActive = false;
+    }
+  }
 }
 
 void mirrorWholeHoriz(Uint32 target[][whole0Length]) {
@@ -810,7 +874,19 @@ void renderBoard() {
       }
     }
   }
-  SDL_RenderPresent(renderer);
+}
+
+void renderUi() {
+  boxColor(renderer, buttonRedCw.col, buttonRedCw.row, buttonRedCw.col + buttonWidth, buttonRedCw.row + buttonWidth, red);
+  boxColor(renderer, buttonOrangeCw.col, buttonOrangeCw.row, buttonOrangeCw.col + buttonWidth, buttonOrangeCw.row + buttonWidth, orange);
+  boxColor(renderer, buttonYellowCw.col, buttonYellowCw.row, buttonYellowCw.col + buttonWidth, buttonYellowCw.row + buttonWidth, yellow);
+  boxColor(renderer, buttonGreenCw.col, buttonGreenCw.row, buttonGreenCw.col + buttonWidth, buttonGreenCw.row + buttonWidth, green);
+  boxColor(renderer, buttonBlueCw.col, buttonBlueCw.row, buttonBlueCw.col + buttonWidth, buttonBlueCw.row + buttonWidth, blue);
+  boxColor(renderer, buttonRedCcw.col, buttonRedCcw.row, buttonRedCcw.col + buttonWidth, buttonRedCcw.row + buttonWidth, red);
+  boxColor(renderer, buttonOrangeCcw.col, buttonOrangeCcw.row, buttonOrangeCcw.col + buttonWidth, buttonOrangeCcw.row + buttonWidth, orange);
+  boxColor(renderer, buttonYellowCcw.col, buttonYellowCcw.row, buttonYellowCcw.col + buttonWidth, buttonYellowCcw.row + buttonWidth, yellow);
+  boxColor(renderer, buttonGreenCcw.col, buttonGreenCcw.row, buttonGreenCcw.col + buttonWidth, buttonGreenCcw.row + buttonWidth, green);
+  boxColor(renderer, buttonBlueCcw.col, buttonBlueCcw.row, buttonBlueCcw.col + buttonWidth, buttonBlueCcw.row + buttonWidth, blue);
 }
 
 void rotateWhole(bool cwTrueCcwFalse) {
@@ -919,6 +995,8 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translat
 Uint32 update(Uint32 interval, void *param) {
   proc();
   renderBoard();
+  renderUi();
+  SDL_RenderPresent(renderer);
   param = param; // To suppress warning;
   return interval;
 }
