@@ -7046,6 +7046,8 @@ Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
 //let highlight: string = "hsl(250, 100%, 80%)";
 Uint32 keystate = 0;
 Uint32 keystateprev = 0;
+int moveTimeout = 144;
+int moveTimer = moveTimeout;
 int noParam = 0;
 int noParam2 = 0;
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
@@ -7629,44 +7631,57 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
 
 void proc(Uint32 interval) {
   centerWhole(whole, true);
-  if((keystate & 0x1) == 0x1 && (((keystateprev & 0x1) != 0x1) || false)) {
+  if((keystate & 0x1) == 0x1 && (((keystateprev & 0x1) != 0x1) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(red, true);
   }
-  if((keystate & 0x2) == 0x2 && (((keystateprev & 0x2) != 0x2) || false)) {
+  if((keystate & 0x2) == 0x2 && (((keystateprev & 0x2) != 0x2) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(red, false);
   }
-  if((keystate & 0x4) == 0x4 && (((keystateprev & 0x4) != 0x4) || false)) {
+  if((keystate & 0x4) == 0x4 && (((keystateprev & 0x4) != 0x4) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(orange, true);
   }
-  if((keystate & 0x8) == 0x8 && (((keystateprev & 0x8) != 0x8) || false)) {
+  if((keystate & 0x8) == 0x8 && (((keystateprev & 0x8) != 0x8) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(orange, false);
   }
-  if((keystate & 0x10) == 0x10 && (((keystateprev & 0x10) != 0x10) || false)) {
+  if((keystate & 0x10) == 0x10 && (((keystateprev & 0x10) != 0x10) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(yellow, true);
   }
-  if((keystate & 0x20) == 0x20 && (((keystateprev & 0x20) != 0x20) || false)) {
+  if((keystate & 0x20) == 0x20 && (((keystateprev & 0x20) != 0x20) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(yellow, false);
   }
-  if((keystate & 0x40) == 0x40 && (((keystateprev & 0x40) != 0x40) || false)) {
+  if((keystate & 0x40) == 0x40 && (((keystateprev & 0x40) != 0x40) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(green, true);
   }
-  if((keystate & 0x80) == 0x80 && (((keystateprev & 0x80) != 0x80) || false)) {
+  if((keystate & 0x80) == 0x80 && (((keystateprev & 0x80) != 0x80) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(green, false);
   }
-  if((keystate & 0x100) == 0x100 && (((keystateprev & 0x100) != 0x100) || false)) {
+  if((keystate & 0x100) == 0x100 && (((keystateprev & 0x100) != 0x100) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(blue, true);
   }
-  if((keystate & 0x200) == 0x200 && (((keystateprev & 0x200) != 0x200) || false)) {
+  if((keystate & 0x200) == 0x200 && (((keystateprev & 0x200) != 0x200) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     clockMove(blue, false);
   }
-  if((keystate & 0x400) == 0x400 && (((keystateprev & 0x400) != 0x400) || false)) {
+  if((keystate & 0x400) == 0x400 && (((keystateprev & 0x400) != 0x400) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     rotateWhole(true);
   }
-  if((keystate & 0x800) == 0x800 && (((keystateprev & 0x800) != 0x800) || false)) {
+  if((keystate & 0x800) == 0x800 && (((keystateprev & 0x800) != 0x800) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     rotateWhole(false);
   }
 
-  if((keystate & 0x20000) == 0x20000 && (((keystateprev & 0x20000) != 0x20000) || false)) {
+  if((keystate & 0x20000) == 0x20000 && (((keystateprev & 0x20000) != 0x20000) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     ++wholecoord.col;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7680,7 +7695,8 @@ void proc(Uint32 interval) {
       }
     }
   }
-  if((keystate & 0x10000) == 0x10000 && (((keystateprev & 0x10000) != 0x10000) || false)) {
+  if((keystate & 0x10000) == 0x10000 && (((keystateprev & 0x10000) != 0x10000) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     --wholecoord.col;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7695,7 +7711,8 @@ void proc(Uint32 interval) {
     }
   }
   bool apply = false;
-  if((keystate & 0x4000) == 0x4000 && (((keystateprev & 0x4000) != 0x4000) || false)) {
+  if((keystate & 0x4000) == 0x4000 && (((keystateprev & 0x4000) != 0x4000) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     gravityTimer = gravityTimeout;
     bool hit = false;
     while (hit == false) {
@@ -7716,7 +7733,8 @@ void proc(Uint32 interval) {
       }
     }
   }
-  else if((keystate & 0x8000) == 0x8000 && (((keystateprev & 0x8000) != 0x8000) || false)) {
+  else if((keystate & 0x8000) == 0x8000 && (((keystateprev & 0x8000) != 0x8000) || moveTimer < 0)) {
+    moveTimer = moveTimeout;
     gravityTimer = gravityTimeout;
     ++wholecoord.row;
     for (int i = 0; i < wholeLength; ++i) {
@@ -7755,8 +7773,10 @@ void proc(Uint32 interval) {
   }
   if (apply == true)
     applyWhole();
-  else if((keystate & 0x80000) == 0x80000 && (((keystateprev & 0x80000) == 0x80000) || false))
+  else if((keystate & 0x80000) == 0x80000 && (((keystateprev & 0x80000) == 0x80000) || false)) // TODO jminer
     capitalizeRows();
+  if (moveTimer < 0)
+    moveTimer = moveTimeout;
 }
 
 Coord randomColorMe(Uint32 potentialWhole[][whole0Length]) {
@@ -7929,6 +7949,7 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translat
   }
 }
 Uint32 update(Uint32 interval, void *param) {
+  moveTimer -= interval;
   proc(interval);
   renderTimer -= interval;
   if (renderTimer < 0) {
