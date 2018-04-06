@@ -7053,11 +7053,9 @@ int moveTimerYellow = moveTimeout;
 int moveTimerGreen = moveTimeout;
 int moveTimerBlue = moveTimeout;
 int moveTimerWhole = moveTimeout;
-int moveTimerUp = moveTimeout;
 int moveTimerDown = moveTimeout;
 int moveTimerLeft = moveTimeout;
 int moveTimerRight = moveTimeout;
-int moveTimerSpace = moveTimeout;
 int noParam = 0;
 int noParam2 = 0;
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
@@ -7721,8 +7719,7 @@ void proc(Uint32 interval) {
     }
   }
   bool apply = false;
-  if((keystate & 0x4000) == 0x4000 && (((keystateprev & 0x4000) != 0x4000) || moveTimerUp < 0)) {
-    moveTimerUp = moveTimeout;
+  if((keystate & 0x4000) == 0x4000 && (((keystateprev & 0x4000) != 0x4000))) {
     gravityTimer = gravityTimeout;
     bool hit = false;
     while (hit == false) {
@@ -7783,8 +7780,7 @@ void proc(Uint32 interval) {
   }
   if (apply == true)
     applyWhole();
-  else if((keystate & 0x40000) == 0x40000 && (((keystateprev & 0x40000) == 0x40000) || moveTimerSpace < 0)) {
-    moveTimerSpace = moveTimeout;
+  else if((keystate & 0x40000) == 0x40000 && (((keystateprev & 0x40000) == 0x40000))) {
     capitalizeRows();
   }
 }
@@ -7964,11 +7960,9 @@ Uint32 update(Uint32 interval, void *param) {
   moveTimerYellow -= interval;
   moveTimerGreen -= interval;
   moveTimerBlue -= interval;
-  moveTimerUp -= interval;
   moveTimerDown -= interval;
   moveTimerLeft -= interval;
   moveTimerRight -= interval;
-  moveTimerSpace -= interval;
   proc(interval);
   renderTimer -= interval;
   if (renderTimer < 0) {
