@@ -7024,7 +7024,6 @@ struct Coord {
   int col;
 };
 
-int bcw = 0;
 Uint32 bgcolor = 0xfff6f6f6; //"hsl(50, 7%, 97%)";
 int blockclocks [5] = { 6, 9, 3, 12, 12 };
 const int blockwidth = 22;
@@ -7033,43 +7032,29 @@ Coord boardCoord;
 const int boardLength = 38;
 const int board0Length = 20;
 bool board[boardLength][board0Length]; //TODO
-const Coord buttonRedCw { .row = 922, .col = 790 };
-const Coord buttonOrangeCw { .row = 922, .col = 825 };
-const Coord buttonYellowCw { .row = 922, .col = 860 };
-const Coord buttonGreenCw { .row = 922, .col = 895 };
-const Coord buttonBlueCw { .row = 922, .col = 930 };
-const Coord buttonRedCcw { .row = 957, .col = 790 };
-const Coord buttonOrangeCcw { .row = 957, .col = 825 };
-const Coord buttonYellowCcw { .row = 957, .col = 860 };
-const Coord buttonGreenCcw { .row = 957, .col = 895 };
-const Coord buttonBlueCcw { .row = 957, .col = 930 };
 const int buttonWidth = 25;
 const int clockDirectionsLength = 8;
 const int clockDirections[clockDirectionsLength] = {
   12, 1, 3, 5, 6, 7, 9, 11
 };
 Uint32 colorme = 0x00000100;
-int gcw = 0;
 const int gravityTimeout = 750;
 int gravityTimer = gravityTimeout;
 Uint32 gray1 = 0xffb2b2b2; // "hsl(280, 0%, 70%)";
 Uint32 gray2 = 0xffb3b3b2; // gray1 + 1 r.
 Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
 //let highlight: string = "hsl(250, 100%, 80%)";
+Uint32 keystate = 0;
+Uint32 keystateprev = 0;
 int noParam = 0;
 int noParam2 = 0;
-int ocw = 0;
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
-int rcw = 0;
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
 SDL_Renderer *renderer;
+Uint32 renderTimeout = 12;
+int renderTimer = renderTimeout;
 SDL_Window *screen;
-int sb = 0;
-int sd = 0;
-int sl = 0;
-int sr = 0;
-int su = 0;
-int updateInterval = 150;
+int updateInterval = 12;
 Coord wholecoord = { .row = 0, .col = 0 };
 const int wholeLength = 13;
 const int whole0Length = 13;
@@ -7088,13 +7073,10 @@ Uint32 whole[wholeLength][whole0Length] = {
   { bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor},
   { bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor}
 };
-int vcw = 0;
 Uint32 violet1 = 0xffecc6e0; //"hsl(280, 45%, 70%)";
 Uint32 violet2 = 0xffecc6e1;
 Uint32 violet3 = 0xffedc6e0;
 Uint32 violet4 = 0xffedc6e1;
-int wcw = 0;
-int ycw = 0;
 Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
 Uint32 blockcolors[9] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4 };
 
@@ -7520,74 +7502,88 @@ void keyboard() {
   if(state[SDL_SCANCODE_ESCAPE])
     exit(0);
   if(state[SDL_SCANCODE_1])
-    rcw = 1;
+    keystate |= 0x1;
   if(state[SDL_SCANCODE_Q])
-    rcw = -1;
+    keystate |= 0x2;
   if((!state[SDL_SCANCODE_1] && !state[SDL_SCANCODE_Q])
-    || (state[SDL_SCANCODE_1] && state[SDL_SCANCODE_Q]))
-    rcw = 0;
+    || (state[SDL_SCANCODE_1] && state[SDL_SCANCODE_Q])) {
+    keystate &= ~0x1;
+    keystate &= ~0x2;
+  }
   if(state[SDL_SCANCODE_2])
-    ocw = 1;
+    keystate |= 0x4;
   if(state[SDL_SCANCODE_W])
-    ocw = -1;
+    keystate |= 0x8;
   if((!state[SDL_SCANCODE_2] && !state[SDL_SCANCODE_W])
-    || (state[SDL_SCANCODE_2] && state[SDL_SCANCODE_W]))
-    ocw = 0;
+    || (state[SDL_SCANCODE_2] && state[SDL_SCANCODE_W])) {
+    keystate &= ~0x4;
+    keystate &= ~0x8;
+  }
   if(state[SDL_SCANCODE_3])
-    ycw = 1;
+    keystate |= 0x10;
   if(state[SDL_SCANCODE_E])
-    ycw = -1;
+    keystate |= 0x20;
   if((!state[SDL_SCANCODE_3] && !state[SDL_SCANCODE_E])
-    || (state[SDL_SCANCODE_3] && state[SDL_SCANCODE_E]))
-    ycw = 0;
+    || (state[SDL_SCANCODE_3] && state[SDL_SCANCODE_E])) {
+    keystate &= ~0x10;
+    keystate &= ~0x20;
+  }
   if(state[SDL_SCANCODE_4])
-    gcw = 1;
+    keystate |= 0x40;
   if(state[SDL_SCANCODE_R])
-    gcw = -1;
+    keystate |= 0x80;
   if((!state[SDL_SCANCODE_4] && !state[SDL_SCANCODE_R])
-    || (state[SDL_SCANCODE_4] && state[SDL_SCANCODE_R]))
-    gcw = 0;
+    || (state[SDL_SCANCODE_4] && state[SDL_SCANCODE_R])) {
+    keystate &= ~0x40;
+    keystate &= ~0x80;
+  }
   if(state[SDL_SCANCODE_5])
-    bcw = 1;
+    keystate |= 0x100;
   if(state[SDL_SCANCODE_T])
-    bcw = -1;
+    keystate |= 0x200;
   if((!state[SDL_SCANCODE_5] && !state[SDL_SCANCODE_T])
-    || (state[SDL_SCANCODE_5] && state[SDL_SCANCODE_T]))
-    bcw = 0;
+    || (state[SDL_SCANCODE_5] && state[SDL_SCANCODE_T])) {
+    keystate &= ~0x100;
+    keystate &= ~0x200;
+  }
   if(state[SDL_SCANCODE_6])
-    vcw = 1;
+    keystate |= 0x400;
   if(state[SDL_SCANCODE_Y])
-    vcw = -1;
+    keystate |= 0x800;
   if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
-    || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y]))
-    vcw = 0;
+    || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y])) {
+    keystate &= ~0x400;
+    keystate &= ~0x800;
+  }
   if(state[SDL_SCANCODE_6])
-    wcw = 1;
+    keystate |= 0x1000;
   if(state[SDL_SCANCODE_Y])
-    wcw = -1;
+    keystate |= 0x2000;
   if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
-    || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y]))
-    wcw = 0;
+    || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y])) {
+    keystate &= ~0x1000;
+    keystate &= ~0x2000;
+  }
   if(state[SDL_SCANCODE_UP])
-    su = 1;
+    keystate |= 0x4000;
   else
-    su = 0;
+    keystate &= ~0x4000;
   if(state[SDL_SCANCODE_DOWN])
-    sd = 1;
+    keystate |= 0x8000;
   else
-    sd = 0;
+    keystate &= ~0x8000;
   if(state[SDL_SCANCODE_LEFT])
-    sl = 1;
+    keystate |= 0x10000;
   else
-    sl = 0;
+    keystate &= ~0x10000;
   if(state[SDL_SCANCODE_RIGHT])
-    sr = 1;
+    keystate |= 0x20000;
   else
-    sr = 0;
+    keystate &= ~0x20000;
   if(state[SDL_SCANCODE_SPACE])
-    sb = 1;
+    keystate |= 0x40000;
   else
-    sb = 0;
+    keystate &= ~0x40000;
 }
 
 void mirrorWholeHoriz(Uint32 target[][whole0Length]) {
@@ -7631,46 +7627,46 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
   centerWhole(newWholeX, true);
 }
 
-void proc() {
+void proc(Uint32 interval) {
   centerWhole(whole, true);
-  if(rcw == 1){
+  if((keystate & 0x1) == 0x1) {
     clockMove(red, true);
   }
-  else if(rcw == -1){
+  if((keystate & 0x2) == 0x2) {
     clockMove(red, false);
   }
-  if(ocw == 1){
+  if((keystate & 0x4) == 0x4) {
     clockMove(orange, true);
   }
-  else if(ocw == -1){
+  if((keystate & 0x8) == 0x8) {
     clockMove(orange, false);
   }
-  if(ycw == 1){
+  if((keystate & 0x10) == 0x10) {
     clockMove(yellow, true);
   }
-  else if(ycw == -1){
+  if((keystate & 0x20) == 0x20) {
     clockMove(yellow, false);
   }
-  if(gcw == 1){
+  if((keystate & 0x40) == 0x40) {
     clockMove(green, true);
   }
-  else if(gcw == -1){
+  if((keystate & 0x80) == 0x80) {
     clockMove(green, false);
   }
-  if(bcw == 1){
+  if((keystate & 0x100) == 0x100) {
     clockMove(blue, true);
   }
-  else if(bcw == -1){
+  if((keystate & 0x200) == 0x200) {
     clockMove(blue, false);
   }
-  if(wcw == 1){
+  if((keystate & 0x400) == 0x400) {
     rotateWhole(true);
   }
-  else if(wcw == -1){
+  if((keystate & 0x800) == 0x800) {
     rotateWhole(false);
   }
 
-  if (sr == 1) {
+  if((keystate & 0x20000) == 0x20000) {
     ++wholecoord.col;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7684,7 +7680,7 @@ void proc() {
       }
     }
   }
-  if (sl == 1) {
+  if((keystate & 0x10000) == 0x10000) {
     --wholecoord.col;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7699,8 +7695,8 @@ void proc() {
     }
   }
   bool apply = false;
-  if (su == 1) {
-    gravityTimer = updateInterval;
+  if((keystate & 0x4000) == 0x4000) {
+    gravityTimer = gravityTimeout;
     bool hit = false;
     while (hit == false) {
       ++wholecoord.row;
@@ -7720,8 +7716,8 @@ void proc() {
       }
     }
   }
-  else if (sd == 1) {
-    gravityTimer = updateInterval;
+  else if((keystate & 0x8000) == 0x8000) {
+    gravityTimer = gravityTimeout;
     ++wholecoord.row;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7738,7 +7734,7 @@ void proc() {
     }
   }
   else {
-    gravityTimer -= updateInterval;
+    gravityTimer -= interval;
     if (gravityTimer < 0) {
       gravityTimer += gravityTimeout;
       ++wholecoord.row;
@@ -7759,7 +7755,7 @@ void proc() {
   }
   if (apply == true)
     applyWhole();
-  if (sb == 1)
+  else if((keystate & 0x80000) == 0x80000)
     capitalizeRows();
 }
 
@@ -7933,11 +7929,16 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translat
   }
 }
 Uint32 update(Uint32 interval, void *param) {
-  proc();
-  renderBoard();
-  renderUi();
-  SDL_RenderPresent(renderer);
+  proc(interval);
+  renderTimer -= interval;
+  if (renderTimer < 0) {
+    renderTimer = renderTimeout;
+    renderBoard();
+    renderUi();
+    SDL_RenderPresent(renderer);
+  }
   param = param; // To suppress warning;
+  keystateprev = keystate;
   return interval;
 }
 
