@@ -7629,44 +7629,44 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
 
 void proc(Uint32 interval) {
   centerWhole(whole, true);
-  if((keystate & 0x1) == 0x1) {
+  if((keystate & 0x1) == 0x1 && (((keystateprev & 0x1) != 0x1) || false)) {
     clockMove(red, true);
   }
-  if((keystate & 0x2) == 0x2) {
+  if((keystate & 0x2) == 0x2 && (((keystateprev & 0x2) != 0x2) || false)) {
     clockMove(red, false);
   }
-  if((keystate & 0x4) == 0x4) {
+  if((keystate & 0x4) == 0x4 && (((keystateprev & 0x4) != 0x4) || false)) {
     clockMove(orange, true);
   }
-  if((keystate & 0x8) == 0x8) {
+  if((keystate & 0x8) == 0x8 && (((keystateprev & 0x8) != 0x8) || false)) {
     clockMove(orange, false);
   }
-  if((keystate & 0x10) == 0x10) {
+  if((keystate & 0x10) == 0x10 && (((keystateprev & 0x10) != 0x10) || false)) {
     clockMove(yellow, true);
   }
-  if((keystate & 0x20) == 0x20) {
+  if((keystate & 0x20) == 0x20 && (((keystateprev & 0x20) != 0x20) || false)) {
     clockMove(yellow, false);
   }
-  if((keystate & 0x40) == 0x40) {
+  if((keystate & 0x40) == 0x40 && (((keystateprev & 0x40) != 0x40) || false)) {
     clockMove(green, true);
   }
-  if((keystate & 0x80) == 0x80) {
+  if((keystate & 0x80) == 0x80 && (((keystateprev & 0x80) != 0x80) || false)) {
     clockMove(green, false);
   }
-  if((keystate & 0x100) == 0x100) {
+  if((keystate & 0x100) == 0x100 && (((keystateprev & 0x100) != 0x100) || false)) {
     clockMove(blue, true);
   }
-  if((keystate & 0x200) == 0x200) {
+  if((keystate & 0x200) == 0x200 && (((keystateprev & 0x200) != 0x200) || false)) {
     clockMove(blue, false);
   }
-  if((keystate & 0x400) == 0x400) {
+  if((keystate & 0x400) == 0x400 && (((keystateprev & 0x400) != 0x400) || false)) {
     rotateWhole(true);
   }
-  if((keystate & 0x800) == 0x800) {
+  if((keystate & 0x800) == 0x800 && (((keystateprev & 0x800) != 0x800) || false)) {
     rotateWhole(false);
   }
 
-  if((keystate & 0x20000) == 0x20000) {
+  if((keystate & 0x20000) == 0x20000 && (((keystateprev & 0x20000) != 0x20000) || false)) {
     ++wholecoord.col;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7680,7 +7680,7 @@ void proc(Uint32 interval) {
       }
     }
   }
-  if((keystate & 0x10000) == 0x10000) {
+  if((keystate & 0x10000) == 0x10000 && (((keystateprev & 0x10000) != 0x10000) || false)) {
     --wholecoord.col;
     for (int i = 0; i < wholeLength; ++i) {
       for (int j = 0; j < whole0Length; ++j) {
@@ -7695,7 +7695,7 @@ void proc(Uint32 interval) {
     }
   }
   bool apply = false;
-  if((keystate & 0x4000) == 0x4000) {
+  if((keystate & 0x4000) == 0x4000 && (((keystateprev & 0x4000) != 0x4000) || false)) {
     gravityTimer = gravityTimeout;
     bool hit = false;
     while (hit == false) {
@@ -7716,7 +7716,7 @@ void proc(Uint32 interval) {
       }
     }
   }
-  else if((keystate & 0x8000) == 0x8000) {
+  else if((keystate & 0x8000) == 0x8000 && (((keystateprev & 0x8000) != 0x8000) || false)) {
     gravityTimer = gravityTimeout;
     ++wholecoord.row;
     for (int i = 0; i < wholeLength; ++i) {
@@ -7755,7 +7755,7 @@ void proc(Uint32 interval) {
   }
   if (apply == true)
     applyWhole();
-  else if((keystate & 0x80000) == 0x80000)
+  else if((keystate & 0x80000) == 0x80000 && (((keystateprev & 0x80000) == 0x80000) || false))
     capitalizeRows();
 }
 
