@@ -781,10 +781,10 @@ void proc(Uint32 interval) {
   }
   if (apply == true)
     applyWhole();
-  else if((keystate & 0x80000) == 0x80000 && (((keystateprev & 0x80000) == 0x80000) || false)) // TODO jminer
-    capitalizeRows();
-  if (moveTimerSpace < 0)
+  else if((keystate & 0x40000) == 0x40000 && (((keystateprev & 0x40000) == 0x40000) || moveTimerSpace < 0)) {
     moveTimerSpace = moveTimeout;
+    capitalizeRows();
+  }
 }
 
 Coord randomColorMe(Uint32 potentialWhole[][whole0Length]) {
