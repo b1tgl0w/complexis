@@ -57,6 +57,8 @@ int moveTimerRight = moveTimeout;
 int noParam = 0;
 int noParam2 = 0;
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
+int prevDirectionMain[5] = { -1, -1, -1, -1, -1 };
+int prevDirectionSecondary[5] = { -1, -1, -1, -1, -1 };
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
 SDL_Renderer *renderer;
 Uint32 renderTimeout = 12;
@@ -96,6 +98,7 @@ void centerWhole(Uint32 target[][whole0Length]);
 void clockMove(Uint32 color, bool cwTrueCcwFalse);
 int clockwise(bool cw, int clockDirection);
 void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]);
+int colorIndex(Uint32 color);
 void colorWhole();
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 vector<Coord> getAdjOccupied(Coord coords);
@@ -104,6 +107,9 @@ int getClockDirection(const Coord &center, const Coord &d);
 Coord getCoords(Uint32 color);
 Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length]);
 Coord getPotentialCoords(const Coord & coords, int clockDirection);
+bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]);
+bool inMoreSimilarDirectionAsPrev(Uint32 clockDirection, Uint32 newCoordsDirection, int prevDirectionMain,
+  int prevDirectionSecondary);
 bool isOpen(const Coord & coords, Uint32 potentialWhole[][whole0Length]);
 void keyboard();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
@@ -256,6 +262,7 @@ void centerWhole(Uint32 target[][whole0Length], bool translate) {
 void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   Coord curCoords = getCoords(color);
   Coord newCoords = { .row = curCoords.row, .col = curCoords.col };
+  Uint32 newCoordsDirection = -1;
    
   vector<Coord> adjCoords = getAdjOccupied(curCoords);
 
@@ -282,8 +289,21 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       potentialWhole[curCoords.row][curCoords.col] = bgcolor;
       potentialWhole[potentialCoords.row][potentialCoords.col] = color;
       // TODO step1Whole should be contiguous except for the piece in motion.
-      if (isOpen(step1, whole) && isOpen(potentialCoords, whole) && contiguous(potentialCoords, potentialWhole) == true)
-        newCoords = potentialCoords; // TODO copy ctor?
+      if (isOpen(step1, whole) && isOpen(potentialCoords, whole) && contiguous(potentialCoords, potentialWhole) == true) {
+        if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
+          if(inCorridor(curCoords, whole)) {
+            if(inMoreSimilarDirectionAsPrev(clockDirection, newCoordsDirection,
+                prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
+              newCoords = potentialCoords;
+              newCoordsDirection = clockDirection;
+            }
+          }
+        }
+        else {
+          newCoords = potentialCoords; // TODO copy ctor?
+          newCoordsDirection = clockDirection;
+        }
+      }
       else if (isOpen(potentialCoords, whole) == false || contiguous(potentialCoords, potentialWhole) == false) {
         int clockDirectionDiag = getClockDirection(potentialCoords, curCoords);
         if (clockDirectionDiag == -1)
@@ -298,14 +318,32 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
         cloneWhole(whole, potentialWholeDiag); //TODO array copy
         potentialWholeDiag[curCoords.row][curCoords.col] = bgcolor;
         potentialWholeDiag[potentialCoordsDiag.row][potentialCoordsDiag.col] = color;
-        if (isOpen(potentialCoordsDiag, whole) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true)
-          newCoords = potentialCoordsDiag; //TODO copy ctor?
+        if (isOpen(potentialCoordsDiag, whole) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
+          if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
+            if(inCorridor(curCoords, whole)) {
+              if(inMoreSimilarDirectionAsPrev(clockDirection, newCoordsDirection,
+                  prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
+                newCoords = potentialCoords;
+                newCoordsDirection = clockDirection;
+              }
+            }
+          }
+          else {
+            newCoords = potentialCoords; // TODO copy ctor?
+            newCoordsDirection = clockDirection;
+          }
+        }
       }
     }
   }
 
   whole[curCoords.row][curCoords.col] = bgcolor;
   whole[newCoords.row][newCoords.col] = color;
+  if (newCoordsDirection > -1) {
+    if (prevDirectionMain[colorIndex(color)] > -1)
+      prevDirectionSecondary[colorIndex(color)] = prevDirectionMain[colorIndex(color)];
+    prevDirectionMain[colorIndex(color)] = newCoordsDirection;
+  }
 }
 
 int clockwise(bool cw, int clockDirection) {
@@ -331,6 +369,20 @@ void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]) {
       dest[i][j] = target[i][j];
     }
   }
+}
+
+int colorIndex(Uint32 color) {
+    if(color == red)
+      return 0;
+    if(color == orange)
+      return 1;
+    if(color == yellow)
+      return 2;
+    if(color == green)
+      return 3;
+    if(color == blue)
+      return 4;
+   return 5;
 }
 
 void colorWhole() {
@@ -485,6 +537,42 @@ Coord getPotentialCoords(const Coord & coords, int clockDirection) {
   return { .row = y, .col = x };
 }
 
+bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
+  Coord coordsA = { .row = coords.row, .col = coords.col - 1 };
+  Coord coordsB = { .row = coords.row, .col = coords.col + 1 };
+  Coord coordsC = { .row = coords.row - 1, .col = coords.col };
+  Coord coordsD = { .row = coords.row + 1, .col = coords.col, };
+  if(isOpen(coordsA, whole) && isOpen(coordsB, whole)
+    && !isOpen(coordsC, whole) && !isOpen(coordsD, whole))
+    return true;
+  if(isOpen(coordsC, whole) && isOpen(coordsD, whole)
+    && !isOpen(coordsA, whole) && !isOpen(coordsB, whole))
+    return true;
+// TODO does isOpen check all of adjacent blocks, concreted blocks, and boundaries?
+  return false;
+}
+
+bool inMoreSimilarDirectionAsPrev(Uint32 clockDirection, Uint32 newCoordsDirection, int prevDirectionMain,
+  int prevDirectionSecondary) {
+  if (prevDirectionMain < 0)
+    return true;
+  if (newCoordsDirection == prevDirectionMain 
+    || newCoordsDirection == clockwise(true, prevDirectionMain)
+    || newCoordsDirection == clockwise(false, prevDirectionMain))
+    return true;
+  if (clockDirection == prevDirectionMain 
+    || clockDirection == clockwise(true, prevDirectionMain)
+    || clockDirection == clockwise(false, prevDirectionMain))
+    return false;
+  if (prevDirectionSecondary < 0)
+    return true;
+  if (newCoordsDirection == prevDirectionSecondary
+    || newCoordsDirection == clockwise(true, prevDirectionSecondary)
+    || newCoordsDirection == clockwise(false, prevDirectionSecondary))
+    return true;
+  return false;
+}
+
 bool isOpen(const Coord & coords, Uint32 potentialWhole[][whole0Length]) {
   if (coords.col < 0 || coords.row < 0)
     return false;
@@ -630,6 +718,10 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
       if (s.at(i * 7 + j) == '1')
         newWholeX[i][j] = colorme;
     }
+  }
+  for (int i = 0; i < 5; ++i) {
+    prevDirectionMain[i] = -1;
+    prevDirectionSecondary[i] = -1;
   }
 
   centerWhole(newWholeX, true);
