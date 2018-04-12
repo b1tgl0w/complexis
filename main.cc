@@ -292,7 +292,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       if (isOpen(step1, whole) && isOpen(potentialCoords, whole) && contiguous(potentialCoords, potentialWhole) == true) {
         if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
           if(inCorridor(curCoords, whole)) {
-            if(inMoreSimilarDirectionAsPrev(clockDirection, newCoordsDirection,
+            if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirection,
                 prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
               newCoords = potentialCoords;
               newCoordsDirection = clockDirection;
@@ -321,7 +321,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
         if (isOpen(potentialCoordsDiag, whole) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
           if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
             if(inCorridor(curCoords, whole)) {
-              if(inMoreSimilarDirectionAsPrev(clockDirectionDiag, newCoordsDirection,
+              if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirectionDiag,
                   prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
                 newCoords = potentialCoordsDiag;
                 newCoordsDirection = clockDirectionDiag;
@@ -552,23 +552,23 @@ bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
   return false;
 }
 
-bool inMoreSimilarDirectionAsPrev(Uint32 clockDirection, Uint32 newCoordsDirection, int prevDirectionMain,
+bool inMoreSimilarDirectionAsPrev(Uint32 defendingChampionDirection, Uint32 contenderDirection, int prevDirectionMain,
   int prevDirectionSecondary) {
   if (prevDirectionMain < 0)
     return true;
-  if (newCoordsDirection == prevDirectionMain 
-    || newCoordsDirection == clockwise(true, prevDirectionMain)
-    || newCoordsDirection == clockwise(false, prevDirectionMain))
+  if (contenderDirection == prevDirectionMain 
+    || contenderDirection == clockwise(true, prevDirectionMain)
+    || contenderDirection == clockwise(false, prevDirectionMain))
     return true;
-  if (clockDirection == prevDirectionMain 
-    || clockDirection == clockwise(true, prevDirectionMain)
-    || clockDirection == clockwise(false, prevDirectionMain))
+  if (defendingChampionDirection == prevDirectionMain 
+    || defendingChampionDirection == clockwise(true, prevDirectionMain)
+    || defendingChampionDirection == clockwise(false, prevDirectionMain))
     return false;
   if (prevDirectionSecondary < 0)
     return true;
-  if (newCoordsDirection == prevDirectionSecondary
-    || newCoordsDirection == clockwise(true, prevDirectionSecondary)
-    || newCoordsDirection == clockwise(false, prevDirectionSecondary))
+  if (contenderDirection == prevDirectionSecondary
+    || contenderDirection == clockwise(true, prevDirectionSecondary)
+    || contenderDirection == clockwise(false, prevDirectionSecondary))
     return true;
   return false;
 }
