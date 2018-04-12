@@ -323,14 +323,14 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
             if(inCorridor(curCoords, whole)) {
               if(inMoreSimilarDirectionAsPrev(clockDirection, newCoordsDirection,
                   prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
-                newCoords = potentialCoords;
-                newCoordsDirection = clockDirection;
+                newCoords = potentialCoordsDiag;
+                newCoordsDirection = clockDirectionDiag;
               }
             }
           }
           else {
-            newCoords = potentialCoords; // TODO copy ctor?
-            newCoordsDirection = clockDirection;
+            newCoords = potentialCoordsDiag; // TODO copy ctor?
+            newCoordsDirection = clockDirectionDiag;
           }
         }
       }
