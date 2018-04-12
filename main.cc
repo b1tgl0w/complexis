@@ -321,7 +321,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
         if (isOpen(potentialCoordsDiag, whole) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
           if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
             if(inCorridor(curCoords, whole)) {
-              if(inMoreSimilarDirectionAsPrev(clockDirection, newCoordsDirection,
+              if(inMoreSimilarDirectionAsPrev(clockDirectionDiag, newCoordsDirection,
                   prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
                 newCoords = potentialCoordsDiag;
                 newCoordsDirection = clockDirectionDiag;
