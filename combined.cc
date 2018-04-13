@@ -7294,6 +7294,15 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       if (isOpen(step1, whole) && isOpen(potentialCoords, whole) && contiguous(potentialCoords, potentialWhole) == true) {
         if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
           if(inCorridor(curCoords, whole)) {
+// Procedure:
+// For each color:
+// 1. Keep track of the direction you enter the corridor.
+// 2. Exit the same direction you enter the corridor
+// 3. If you reach a dead end (3 adjacent), then that's exiting the corridor.
+// 4. In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
+// 4. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
+// 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
+// 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
             if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirection,
                 prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
               newCoords = potentialCoords;
@@ -7555,6 +7564,7 @@ bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
 }
 
 bool inMoreSimilarDirectionAsPrev(Uint32 defendingChampionDirection, Uint32 contenderDirection, int prevDirectionMain,
+// TODO jminer get rid of this function
   int prevDirectionSecondary) {
   if (prevDirectionMain < 0)
     return true;
