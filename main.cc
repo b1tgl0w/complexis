@@ -100,6 +100,7 @@ int clockwise(bool cw, int clockDirection);
 void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]);
 int colorIndex(Uint32 color);
 void colorWhole();
+void colorsInCorridor(Uint32 potentialWhole[][whole0Length], Uint32 outArray[], Uint32 &outSize);
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 vector<Coord> getAdjOccupied(Coord coords);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
@@ -115,6 +116,7 @@ void keyboard();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
 void newBoard();
 void newWhole(Uint32 newWholeX[][whole0Length]);
+int oppositeClock(int clockDirection);
 void proc();
 Coord randomColorMe(Uint32 potentialWhole[][whole0Length]);
 int randomRange(int min, int max);
@@ -294,11 +296,13 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
           if(inCorridor(curCoords, whole)) {
 // Procedure:
 // For each color:
-// 1. Keep track of the direction you enter the corridor.
-// 2. Exit the same direction you enter the corridor
-// 3. If you reach a dead end (3 adjacent), then that's exiting the corridor.
-// 4. In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
-// 4. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
+// 1. If no direction is set (such as a piece being in the corridor from initialization), set its direction to 
+//    random 11, 1, 5, or 7. (For now, but see if there's something more logical later.)
+// 2. Keep track of the direction you enter the corridor.
+// 3. Exit the same direction you enter the corridor
+// 4. If you reach a dead end (3 adjacent), then that's exiting the corridor.
+// 4b. In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
+// 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
 // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
 // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
             if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirection,
@@ -416,6 +420,26 @@ void colorWhole() {
       }
     }
   }
+}
+
+void colorsInCorridor(Uint32 potentialWhole[][whole0Length], Uint32 outArray[], Uint32 &outSize) {
+  outSize = 0;
+  Coord redCoords = getCoordsPotentialWhole(red, potentialWhole); 
+  Coord orangeCoords = getCoordsPotentialWhole(orange, potentialWhole); 
+  Coord yellowCoords = getCoordsPotentialWhole(yellow, potentialWhole);
+  Coord greenCoords= getCoordsPotentialWhole(green, potentialWhole); 
+  Coord blueCoords = getCoordsPotentialWhole(blue, potentialWhole);
+ 
+  if (inCorridor(redCoords, potentialWhole) == true)
+    outArray[outSize++] = red;
+  if (inCorridor(orangeCoords, potentialWhole) == true)
+    outArray[outSize++] = orange;
+  if (inCorridor(yellowCoords, potentialWhole) == true)
+    outArray[outSize++] = yellow;
+  if (inCorridor(greenCoords, potentialWhole) == true)
+    outArray[outSize++] = green;
+  if (inCorridor(blueCoords, potentialWhole) == true)
+    outArray[outSize++] = blue;
 }
 
 // TODO this is specialized for an 7 piece whole
@@ -735,6 +759,32 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
   }
 
   centerWhole(newWholeX, true);
+}
+
+int oppositeClockDirection(int clockDirection) {
+  if (clockDirection == 12)
+    return 6;
+  if (clockDirection == 1)
+    return 7;
+  if (clockDirection == 2)
+    return 8;
+  if (clockDirection == 3)
+    return 9;
+  if (clockDirection == 4)
+    return 10;
+  if (clockDirection == 5)
+    return 11;
+  if (clockDirection == 6)
+    return 12;
+  if (clockDirection == 7)
+    return 1;
+  if (clockDirection == 8)
+    return 2;
+  if (clockDirection == 9)
+    return 3;
+  if (clockDirection == 10)
+    return 4;
+  return 5;
 }
 
 void proc(Uint32 interval) {
