@@ -7113,7 +7113,7 @@ Coord getPotentialCoords(const Coord & coords, int clockDirection);
 bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]);
 bool inMoreSimilarDirectionAsPrev(Uint32 clockDirection, Uint32 newCoordsDirection, int prevDirectionMain,
   int prevDirectionSecondary);
-bool isOpen(const Coord & coords, Uint32 potentialWhole[][whole0Length]);
+bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
 void keyboard();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
 void newBoard();
@@ -7125,6 +7125,7 @@ int randomRange(int min, int max);
 void renderBoard();
 void renderUi();
 void rotateWhole(bool cwTrueCcwFalse);
+Coord shadow(Uint32 wholeCoords[][whole0Length], const Coord &wholecoord); 
 void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translate);
 Uint32 update(Uint32 interval, void *param);
 
@@ -7293,7 +7294,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       potentialWhole[curCoords.row][curCoords.col] = bgcolor;
       potentialWhole[potentialCoords.row][potentialCoords.col] = color;
       // TODO step1Whole should be contiguous except for the piece in motion.
-      if (isOpen(step1, whole) && isOpen(potentialCoords, whole) && contiguous(potentialCoords, potentialWhole) == true) {
+      if (isOpen(step1, whole, wholecoord) && isOpen(potentialCoords, whole, wholecoord) && contiguous(potentialCoords, potentialWhole) == true) {
         if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
           if(inCorridor(curCoords, whole)) {
 // Procedure:
@@ -7319,7 +7320,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
           newCoordsDirection = clockDirection;
         }
       }
-      else if (isOpen(potentialCoords, whole) == false || contiguous(potentialCoords, potentialWhole) == false) {
+      else if (isOpen(potentialCoords, whole, wholecoord) == false || contiguous(potentialCoords, potentialWhole) == false) {
         int clockDirectionDiag = getClockDirection(potentialCoords, curCoords);
         if (clockDirectionDiag == -1)
           continue;
@@ -7333,7 +7334,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
         cloneWhole(whole, potentialWholeDiag); //TODO array copy
         potentialWholeDiag[curCoords.row][curCoords.col] = bgcolor;
         potentialWholeDiag[potentialCoordsDiag.row][potentialCoordsDiag.col] = color;
-        if (isOpen(potentialCoordsDiag, whole) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
+        if (isOpen(potentialCoordsDiag, whole, wholecoord) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
           if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
             if(inCorridor(curCoords, whole)) {
               if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirectionDiag,
@@ -7472,13 +7473,13 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
 vector<Coord> getAdjOccupied(Coord coords) {
   vector<Coord> ret;
   
-  if (isOpen( { .row = coords.row - 1, .col = coords.col }, whole) == false)
+  if (isOpen( { .row = coords.row - 1, .col = coords.col }, whole, wholecoord) == false)
     ret.push_back( { .row = coords.row - 1, .col = coords.col} );
-  if (isOpen( { .row = coords.row + 1, .col = coords.col }, whole) == false)
+  if (isOpen( { .row = coords.row + 1, .col = coords.col }, whole, wholecoord) == false)
     ret.push_back( { .row = coords.row + 1, .col = coords.col} );
-  if (isOpen( { .row = coords.row, .col = coords.col - 1}, whole) == false)
+  if (isOpen( { .row = coords.row, .col = coords.col - 1}, whole, wholecoord) == false)
     ret.push_back( { .row = coords.row, .col = coords.col - 1} );
-  if (isOpen( { .row = coords.row, .col = coords.col + 1}, whole) == false)
+  if (isOpen( { .row = coords.row, .col = coords.col + 1}, whole, wholecoord) == false)
     ret.push_back( { .row = coords.row, .col = coords.col + 1} );
   return ret;
 }
@@ -7577,11 +7578,11 @@ bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
   Coord coordsB = { .row = coords.row, .col = coords.col + 1 };
   Coord coordsC = { .row = coords.row - 1, .col = coords.col };
   Coord coordsD = { .row = coords.row + 1, .col = coords.col, };
-  if(isOpen(coordsA, whole) && isOpen(coordsB, whole)
-    && !isOpen(coordsC, whole) && !isOpen(coordsD, whole))
+  if(isOpen(coordsA, whole, wholecoord) && isOpen(coordsB, whole, wholecoord)
+    && !isOpen(coordsC, whole, wholecoord) && !isOpen(coordsD, whole, wholecoord))
     return true;
-  if(isOpen(coordsC, whole) && isOpen(coordsD, whole)
-    && !isOpen(coordsA, whole) && !isOpen(coordsB, whole))
+  if(isOpen(coordsC, whole, wholecoord) && isOpen(coordsD, whole, wholecoord)
+    && !isOpen(coordsA, whole, wholecoord) && !isOpen(coordsB, whole, wholecoord))
     return true;
 // TODO does isOpen check all of adjacent blocks, concreted blocks, and boundaries?
   return false;
@@ -7609,22 +7610,22 @@ bool inMoreSimilarDirectionAsPrev(Uint32 defendingChampionDirection, Uint32 cont
   return false;
 }
 
-bool isOpen(const Coord & coords, Uint32 potentialWhole[][whole0Length]) {
-  if (coords.col < 0 || coords.row < 0)
+bool isOpen(const Coord & piececoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord) {
+  if (piececoords.col < 0 || piececoords.row < 0)
     return false;
-  if (coords.col + wholecoord.col < 0)
+  if (piececoords.col + wholecoord.col < 0)
     return false;
-  if (coords.row + wholecoord.row < 0)
+  if (piececoords.row + wholecoord.row < 0)
     return false;
-  if (coords.col + wholecoord.col >= board0Length)
+  if (piececoords.col + wholecoord.col >= board0Length)
     return false;
-  if (coords.row + wholecoord.row >= boardLength)
-    return false;
-
-  if (board[coords.row + wholecoord.row][coords.col + wholecoord.col])
+  if (piececoords.row + wholecoord.row >= boardLength)
     return false;
 
-  return potentialWhole[coords.row][coords.col] == bgcolor;
+  if (board[piececoords.row + wholecoord.row][piececoords.col + wholecoord.col])
+    return false;
+
+  return potentialWhole[piececoords.row][piececoords.col] == bgcolor;
 }
 
 void keyboard() {
@@ -7848,7 +7849,7 @@ void proc(Uint32 interval) {
         if (whole[i][j] != bgcolor) {
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
-          if(isOpen({ .row = i, .col = j}, whole) == false)
+          if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false)
             --wholecoord.col;
           whole[i][j] = color;
         }
@@ -7863,7 +7864,7 @@ void proc(Uint32 interval) {
         if (whole[i][j] != bgcolor) {
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
-          if(isOpen({ .row = i, .col = j}, whole) == false)
+          if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false)
             ++wholecoord.col;
           whole[i][j] = color;
         }
@@ -7881,7 +7882,7 @@ void proc(Uint32 interval) {
           if (whole[i][j] != bgcolor) {
             Uint32 color = whole[i][j];
             whole[i][j] = bgcolor;
-            if(isOpen({ .row = i, .col = j}, whole) == false) {
+            if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false) {
               --wholecoord.row;
               hit = true;
               apply = true;
@@ -7901,7 +7902,7 @@ void proc(Uint32 interval) {
         if (whole[i][j] != bgcolor) {
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
-          if(isOpen({ .row = i, .col = j}, whole) == false) {
+          if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false) {
             --wholecoord.row;
             apply = true;
           }
@@ -7920,7 +7921,7 @@ void proc(Uint32 interval) {
           if (whole[i][j] != bgcolor) {
             Uint32 color = whole[i][j];
             whole[i][j] = bgcolor;
-            if(isOpen({ .row = i, .col = j}, whole) == false) {
+            if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false) {
               --wholecoord.row;
               apply = true;
             }
@@ -7963,12 +7964,17 @@ void renderBoard() {
       //ctx.fillRect(j * blockwidth, i * blockwidth, blockwidth - 1, blockwidth - 1);
     }
   }
+  Coord shadowcoord = shadow(whole, wholecoord);
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
       if(arrayHas(blockcolors, 9, whole[i][j])){ //TODO hardcoded
         int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
         int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
         boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+        int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
+        int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
+        Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x50000000; //TODO endian bug
+        boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor);
       }
     }
   }
@@ -8032,7 +8038,7 @@ void rotateWhole(bool cwTrueCcwFalse) {
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length; ++j) {
       if (potentialWhole[i][j] != bgcolor
-        && isOpen( { .row = i, .col = j }, emptyWhole) == false)
+        && isOpen( { .row = i, .col = j }, emptyWhole, wholecoord) == false)
         open = false;
     }
   }
@@ -8046,6 +8052,25 @@ void rotateWhole(bool cwTrueCcwFalse) {
 
     centerWhole(whole, true);
   }
+}
+
+Coord shadow(Uint32 whole[][whole0Length], const Coord &coords) {
+  Uint32 clone[wholeLength][whole0Length];
+  cloneWhole(whole, clone);
+  Coord ret = { .row = coords.row, .col = coords.col };
+  bool loop = true;
+  while(loop == true) {
+    ret.row++;
+    for (int i = 0; i < wholeLength; ++i) {
+      for (int j = 0; j < whole0Length; ++j) {
+        if (clone[i][j] != bgcolor && (board[i + ret.row][j + ret.col] == true || (i + ret.row) >= boardLength)) {
+          ret.row--;
+          loop = false;
+        }
+      }
+    }
+  } 
+  return ret;
 }
 
 void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translate) {
