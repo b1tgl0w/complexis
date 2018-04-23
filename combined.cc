@@ -7026,11 +7026,11 @@ struct Coord {
 
 Uint32 bgcolor = 0xfff6f6f6; //"hsl(50, 7%, 97%)";
 int blockclocks [5] = { 6, 9, 3, 12, 12 };
-const int blockwidth = 22;
+const int blockwidth = 30;
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
 Coord boardCoord;
-const int boardLength = 38;
-const int board0Length = 20;
+const int boardLength = 28;
+const int board0Length = 16;
 bool board[boardLength][board0Length]; //TODO
 const int buttonWidth = 25;
 const int clockDirectionsLength = 8;
