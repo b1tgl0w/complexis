@@ -7028,6 +7028,7 @@ Uint32 bgcolor = 0xfff6f6f6; //"hsl(50, 7%, 97%)";
 int blockclocks [5] = { 6, 9, 3, 12, 12 };
 const int blockwidth = 30;
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
+bool blueInCorridor = false;
 Coord boardCoord;
 const int boardLength = 28;
 const int board0Length = 16;
@@ -7038,11 +7039,22 @@ const int clockDirections[clockDirectionsLength] = {
   12, 1, 3, 5, 6, 7, 9, 11
 };
 Uint32 colorme = 0x00000100;
+int corridorClockBlueCw = -1;
+int corridorClockBlueCcw = -1;
+int corridorClockGreenCw = -1;
+int corridorClockGreenCcw = -1;
+int corridorClockOrangeCw = -1;
+int corridorClockOrangeCcw = -1;
+int corridorClockRedCw = -1;
+int corridorClockRedCcw = -1;
+int corridorClockYellowCw = -1;
+int corridorClockYellowCcw = -1;
 const int gravityTimeout = 750;
 int gravityTimer = gravityTimeout;
 Uint32 gray1 = 0xffb2b2b2; // "hsl(280, 0%, 70%)";
 Uint32 gray2 = 0xffb3b3b2; // gray1 + 1 r.
 Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
+bool greenInCorridor = false;
 //let highlight: string = "hsl(250, 100%, 80%)";
 Uint32 keystate = 0;
 Uint32 keystateprev = 0;
@@ -7059,9 +7071,11 @@ int moveTimerRight = moveTimeout;
 int noParam = 0;
 int noParam2 = 0;
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
+bool orangeInCorridor = false;
 int prevDirectionMain[5] = { -1, -1, -1, -1, -1 };
 int prevDirectionSecondary[5] = { -1, -1, -1, -1, -1 };
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
+bool redInCorridor = false;
 SDL_Renderer *renderer;
 Uint32 renderTimeout = 12;
 int renderTimer = renderTimeout;
@@ -7090,10 +7104,12 @@ Uint32 violet2 = 0xffecc6e1;
 Uint32 violet3 = 0xffedc6e0;
 Uint32 violet4 = 0xffedc6e1;
 Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
+bool yellowInCorridor = false;
 Uint32 blockcolors[9] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4 };
 
 void applyWhole();
 bool arrayHas(Uint32 ar[], int size, Uint32 element);
+bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
 Bounds bounds(Uint32 target[][whole0Length]);
 void capitalizeRows();
 void centerWhole(Uint32 target[][whole0Length]);
@@ -7102,8 +7118,10 @@ int clockwise(bool cw, int clockDirection);
 void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]);
 int colorIndex(Uint32 color);
 void colorWhole();
-void colorsInCorridor(Uint32 potentialWhole[][whole0Length], Uint32 outArray[], Uint32 &outSize);
+void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, bool &y, bool &g, bool &b);
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
+void corridorClocks(Uint32 potentialWhole[][whole0Length]);
+void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
 vector<Coord> getAdjOccupied(Coord coords);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
 int getClockDirection(const Coord &center, const Coord &d);
@@ -7111,6 +7129,7 @@ Coord getCoords(Uint32 color);
 Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length]);
 Coord getPotentialCoords(const Coord & coords, int clockDirection);
 bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]);
+bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]);
 bool inMoreSimilarDirectionAsPrev(Uint32 clockDirection, Uint32 newCoordsDirection, int prevDirectionMain,
   int prevDirectionSecondary);
 bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
@@ -7146,6 +7165,40 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element) {
   for(int i = 0; i < size; ++i) {
     if(ar[i] == element)
       return true;
+  }
+  return false;
+}
+
+bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color) {
+  if (color == red) {
+    if (cwTrueCcwFalse)
+      return corridorClockRedCw == directionB;
+    else
+      return corridorClockRedCcw == directionB;
+  }
+  if (color == orange) {
+    if (cwTrueCcwFalse)
+      return corridorClockOrangeCw == directionB;
+    else
+      return corridorClockOrangeCcw == directionB;
+  }
+  if (color == yellow) {
+    if (cwTrueCcwFalse)
+      return corridorClockYellowCw == directionB;
+    else
+      return corridorClockYellowCcw == directionB;
+  }
+  if (color == green) {
+    if (cwTrueCcwFalse)
+      return corridorClockGreenCw == directionB;
+    else
+      return corridorClockGreenCcw == directionB;
+  }
+  if (color == blue) {
+    if (cwTrueCcwFalse)
+      return corridorClockBlueCw == directionB;
+    else
+      return corridorClockBlueCcw == directionB;
   }
   return false;
 }
@@ -7268,7 +7321,9 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   Coord curCoords = getCoords(color);
   Coord newCoords = { .row = curCoords.row, .col = curCoords.col };
   Uint32 newCoordsDirection = -1;
-   
+
+  corridorClocks(whole); // This stays up top... called once
+
   vector<Coord> adjCoords = getAdjOccupied(curCoords);
 
   if (adjCoords.size() < 4) {
@@ -7297,22 +7352,21 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       if (isOpen(step1, whole, wholecoord) && isOpen(potentialCoords, whole, wholecoord) && contiguous(potentialCoords, potentialWhole) == true) {
         if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
           if(inCorridor(curCoords, whole)) {
+            if (betterCorridorExit(cwTrueCcwFalse, newCoordsDirection, clockDirection, color)) {
+              newCoords = potentialCoords; // TODO copy ctor?
+              newCoordsDirection = clockDirection;
+            }
 // Procedure:
 // For each color:
-// 1. If no direction is set (such as a piece being in the corridor from initialization), set its direction to 
-//    random 11, 1, 5, or 7. (For now, but see if there's something more logical later.)
+// 1. If in corridor and no direction is set (such as a piece being in the corridor from initialization),
+//    set its direction to 1. (For now, but see if there's something more logical later.)
 // 2. Keep track of the direction you enter the corridor.
 // 3. Exit the same direction you enter the corridor
 // 4. If you reach a dead end (3 adjacent), then that's exiting the corridor.
-// 4b. In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
+// 4b.In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
 // 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
 // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
 // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
-            if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirection,
-                prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
-              newCoords = potentialCoords;
-              newCoordsDirection = clockDirection;
-            }
           }
         }
         else {
@@ -7337,9 +7391,8 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
         if (isOpen(potentialCoordsDiag, whole, wholecoord) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
           if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
             if(inCorridor(curCoords, whole)) {
-              if(inMoreSimilarDirectionAsPrev(newCoordsDirection, clockDirectionDiag,
-                  prevDirectionMain[colorIndex(color)], prevDirectionSecondary[colorIndex(color)])) {
-                newCoords = potentialCoordsDiag;
+              if (betterCorridorExit(cwTrueCcwFalse, newCoordsDirection, clockDirectionDiag, color)) {
+                newCoords = potentialCoordsDiag; // TODO copy ctor?
                 newCoordsDirection = clockDirectionDiag;
               }
             }
@@ -7355,6 +7408,39 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
 
   whole[curCoords.row][curCoords.col] = bgcolor;
   whole[newCoords.row][newCoords.col] = color;
+
+  if (color == red) {
+    if (!redInCorridor && inCorridor(red, whole)) {
+      corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockRedCcw = oppositeClock(corridorClockRedCw);
+    }
+  }
+  if (color == orange) {
+    if (!orangeInCorridor && inCorridor(orange, whole)) {
+      corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
+    }
+  }
+  if (color == yellow) {
+    if (!yellowInCorridor && inCorridor(yellow, whole)) {
+      corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
+    }
+  }
+  if (color == green) {
+    if (!greenInCorridor && inCorridor(green, whole)) {
+      corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
+    }
+  }
+  if (color == blue) {
+    if (!blueInCorridor && inCorridor(blue, whole)) {
+      corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
+    }
+  }
+
+// TODO jminer the following if statement might be old
   if (newCoordsDirection > -1) {
     if (prevDirectionMain[colorIndex(color)] > -1)
       prevDirectionSecondary[colorIndex(color)] = prevDirectionMain[colorIndex(color)];
@@ -7425,24 +7511,18 @@ void colorWhole() {
   }
 }
 
-void colorsInCorridor(Uint32 potentialWhole[][whole0Length], Uint32 outArray[], Uint32 &outSize) {
-  outSize = 0;
+void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, bool &y, bool &g, bool &b) {
   Coord redCoords = getCoordsPotentialWhole(red, potentialWhole); 
   Coord orangeCoords = getCoordsPotentialWhole(orange, potentialWhole); 
   Coord yellowCoords = getCoordsPotentialWhole(yellow, potentialWhole);
   Coord greenCoords= getCoordsPotentialWhole(green, potentialWhole); 
   Coord blueCoords = getCoordsPotentialWhole(blue, potentialWhole);
  
-  if (inCorridor(redCoords, potentialWhole) == true)
-    outArray[outSize++] = red;
-  if (inCorridor(orangeCoords, potentialWhole) == true)
-    outArray[outSize++] = orange;
-  if (inCorridor(yellowCoords, potentialWhole) == true)
-    outArray[outSize++] = yellow;
-  if (inCorridor(greenCoords, potentialWhole) == true)
-    outArray[outSize++] = green;
-  if (inCorridor(blueCoords, potentialWhole) == true)
-    outArray[outSize++] = blue;
+  r = inCorridor(redCoords, potentialWhole);
+  o = inCorridor(orangeCoords, potentialWhole);
+  y = inCorridor(yellowCoords, potentialWhole);
+  g = inCorridor(greenCoords, potentialWhole);
+  b = inCorridor(blueCoords, potentialWhole);
 }
 
 // TODO this is specialized for an 7 piece whole
@@ -7468,6 +7548,39 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
   } while(l.size()>0);
 
   return s.size()==7; // TODO hardcoded
+}
+
+void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
+  bool r, o, y, g, b;
+  colorsInCorridor(potentialWhole, r, o, y, g, b);
+  if ((redInCorridor && !r) || (!redInCorridor && r))
+    corridorClocksColor(potentialWhole, corridorClockRedCw, corridorClockRedCcw);
+  if ((orangeInCorridor && !o) || (!orangeInCorridor && o))
+    corridorClocksColor(potentialWhole, corridorClockOrangeCw, corridorClockOrangeCcw);
+  if ((yellowInCorridor && !y) || (!yellowInCorridor && y))
+    corridorClocksColor(potentialWhole, corridorClockYellowCw, corridorClockYellowCcw);
+  if ((greenInCorridor && !g) || (!greenInCorridor && g))
+    corridorClocksColor(potentialWhole, corridorClockGreenCw, corridorClockGreenCcw);
+  if ((blueInCorridor && !b) || (!blueInCorridor && b))
+    corridorClocksColor(potentialWhole, corridorClockBlueCw, corridorClockBlueCcw);
+  redInCorridor = r;
+  orangeInCorridor = o;
+  yellowInCorridor = y;
+  greenInCorridor = g;
+  blueInCorridor = b;
+}
+
+void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) {
+  int tmp;
+  if (a == -1) {
+    a = 1;
+    b = 7;
+  }
+  else {
+    tmp = a;
+    a = b;
+    b = tmp;
+  }
 }
 
 vector<Coord> getAdjOccupied(Coord coords) {
@@ -7571,6 +7684,10 @@ Coord getPotentialCoords(const Coord & coords, int clockDirection) {
     x = -1;
 
   return { .row = y, .col = x };
+}
+
+bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]) {
+  return inCorridor(getCoords(color), whole);
 }
 
 bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
@@ -7762,9 +7879,20 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
   }
 
   centerWhole(newWholeX, true);
+  corridorClockRedCw = -1;
+  corridorClockOrangeCw = -1;
+  corridorClockYellowCw = -1;
+  corridorClockGreenCw = -1;
+  corridorClockBlueCw = -1;
+  corridorClockRedCcw = -1;
+  corridorClockOrangeCcw = -1;
+  corridorClockYellowCcw = -1;
+  corridorClockGreenCcw = -1;
+  corridorClockBlueCcw = -1;
+  colorsInCorridor(newWholeX, redInCorridor, orangeInCorridor, yellowInCorridor, greenInCorridor, blueInCorridor);
 }
 
-int oppositeClockDirection(int clockDirection) {
+int oppositeClock(int clockDirection) {
   if (clockDirection == 12)
     return 6;
   if (clockDirection == 1)
