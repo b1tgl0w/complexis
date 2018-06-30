@@ -7024,14 +7024,14 @@ struct Coord {
   int col;
 };
 
-Uint32 bgcolor = 0xfff6f6f6; //"hsl(50, 7%, 97%)";
+Uint32 bgcolor = 0xffa7a7a7; //"hsl(50, 7%, 97%)";
 int blockclocks [5] = { 6, 9, 3, 12, 12 };
-const int blockwidth = 30;
+const int blockwidth = 25;
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
 bool blueInCorridor = false;
 Coord boardCoord;
-const int boardLength = 28;
-const int board0Length = 16;
+const int boardLength = 34;
+const int board0Length = 19;
 bool board[boardLength][board0Length]; //TODO
 const int buttonWidth = 25;
 const int clockDirectionsLength = 8;
@@ -7051,8 +7051,8 @@ int corridorClockYellowCw = -1;
 int corridorClockYellowCcw = -1;
 const int gravityTimeout = 750;
 int gravityTimer = gravityTimeout;
-Uint32 gray1 = 0xffb2b2b2; // "hsl(280, 0%, 70%)";
-Uint32 gray2 = 0xffb3b3b2; // gray1 + 1 r.
+Uint32 gray1 = 0xffc5c5c5; // "hsl(280, 0%, 70%)";
+Uint32 gray2 = 0xffc6c6c5; // gray1 + 1 r.
 Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
 bool greenInCorridor = false;
 //let highlight: string = "hsl(250, 100%, 80%)";
@@ -8083,7 +8083,7 @@ int randomRange(int min, int max) {
 }
 
 void renderBoard() {
-  SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+  SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
   SDL_RenderClear(renderer);
   boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
   for(int i = 0; i < boardLength; ++i) {
@@ -8101,7 +8101,7 @@ void renderBoard() {
         boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
         int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
-        Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x70000000; //TODO endian bug
+        Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0xa0000000; //TODO endian bug
         boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor);
       }
     }
@@ -8298,6 +8298,7 @@ int main(int argc, char **argv) {
   boardCoord.col = 1824 / 2 - board0Length * blockwidth / 2;
   boardCoord.row = 984 / 2 - boardLength * blockwidth / 2;
   if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+    bgcolor = SDL_Swap32(bgcolor);
     red = SDL_Swap32(red);
     orange = SDL_Swap32(orange);
     yellow = SDL_Swap32(yellow);
