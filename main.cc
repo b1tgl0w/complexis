@@ -1099,7 +1099,7 @@ void renderBoard() {
         boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
         int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
-        Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0xa0000000; //TODO endian bug
+        Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x40000000; //TODO endian bug
         boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor);
       }
     }
