@@ -2,7 +2,6 @@
 #include <dlfcn.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
-#include <set>
 #include <cstdlib>
 #include <ctime>
 
@@ -522,30 +521,38 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
   b = inCorridor(blueCoords, potentialWhole);
 }
 
+bool arrayHas(int a[], int size, int search) {
+  for (int i = 0; i < size; ++i)
+    if(a[i] == search)
+      return true;
+  return false;
+}
+
 // TODO this is specialized for an 7 piece whole
 // TODO is this right?
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
   int lf = 0;
   int l[512];  
-  
-  set<int> s;
+  int sf = 0;
+  int s[512];
   l[lf++] = startingCoord.row * wholeLength + startingCoord.col;
   do {
     int m=l[--lf];
-    s.insert(m);
+    if (arrayHas(s, sf, m) == false)
+      s[sf++] = m;
     int x=m/wholeLength; // This is actually y
     int y=m%wholeLength; // This is actually x
-    if(x-1>=0&&potential[x-1][y]!=bgcolor&&s.count(m-wholeLength)==0)
+    if(x-1>=0&&potential[x-1][y]!=bgcolor&&arrayHas(s,sf,m-wholeLength)==false)
       l[lf++]=m-wholeLength;
-    if(x+1<wholeLength&&potential[x+1][y]!=bgcolor&&s.count(m+wholeLength)==0)
+    if(x+1<wholeLength&&potential[x+1][y]!=bgcolor&&arrayHas(s,sf,m+wholeLength)==false)
       l[lf++] = m+wholeLength;
-    if(y-1>=0&&potential[x][y-1]!=bgcolor&&s.count(m-1)==0)
+    if(y-1>=0&&potential[x][y-1]!=bgcolor&&arrayHas(s,sf,m-1)==false)
       l[lf++]=m-1;
-    if(y+1<wholeLength&&potential[x][y+1]!=bgcolor&&s.count(m+1)==0)
+    if(y+1<wholeLength&&potential[x][y+1]!=bgcolor&&arrayHas(s,sf,m+1)==false)
       l[lf++]=m+1;
   } while(lf>0);
 
-  return s.size()==7; // TODO hardcoded
+  return sf==7; // TODO hardcoded
 }
 
 void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
