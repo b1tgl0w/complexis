@@ -5,7 +5,7 @@
 #
 
 CC := g++
-CC_FLAGS := --std=c++98
+CC_FLAGS := --std=c++98 -DPLATFORM_PC
 
 .PHONY: all clean dc
 all: post-build
@@ -22,7 +22,6 @@ main-build: pre-build
 	@$(MAKE) --no-print-directory main-target
 
 main-target: obj/complexis
-
 
 strict: CC_FLAGS += -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wmaybe-uninitialized -Wuninitialized
 strict: obj/complexis
@@ -61,6 +60,8 @@ clean:
 
 rm-elf:
 	rm -f $(TARGET)
+
+CFLAGS := -DPLATFORM_DC
 
 $(TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
