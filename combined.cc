@@ -7000,7 +7000,6 @@ std::string sample7 =
 "0111000"\
 "0010000"\
 "0000000";
-#include <iostream>
 #include <dlfcn.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
@@ -8320,7 +8319,7 @@ int main(int argc, char **argv) {
   else if (SDL_BYTEORDER == SDL_LIL_ENDIAN) {
   }
   else
-    cout << "Could not determine endianness" << endl;
+    printf("Could not determine endianness\n");
 
 // TODO destroy window release renderer.
 // Here's orig main.
