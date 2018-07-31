@@ -1,5 +1,4 @@
-#include <string>
-std::string sample7 = 
+char sample7[] = 
 "0000000"\
 "0000000"\
 "0000000"\
@@ -7000,8 +6999,14 @@ std::string sample7 =
 "0111000"\
 "0010000"\
 "0000000";
+#ifdef PLATFORM_PC
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+#endif
+#ifdef PLATFORM_DC
+typedef unsigned int Uint32; //TODO For now
+#endif
+
 #include <cstdlib>
 #include <ctime>
 
@@ -7071,10 +7076,14 @@ int prevDirectionMain[5] = { -1, -1, -1, -1, -1 };
 int prevDirectionSecondary[5] = { -1, -1, -1, -1, -1 };
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
 bool redInCorridor = false;
+#ifdef PLATFORM_PC
 SDL_Renderer *renderer;
+#endif
 Uint32 renderTimeout = 12;
 int renderTimer = renderTimeout;
+#ifdef PLATFORM_PC
 SDL_Window *screen;
+#endif
 int updateInterval = 12;
 Coord wholecoord = { .row = 0, .col = 0 };
 const int wholeLength = 13;
@@ -7750,6 +7759,7 @@ bool isOpen(const Coord & piececoords, Uint32 potentialWhole[][whole0Length], co
 }
 
 void keyboard() {
+#ifdef PLATFORM_PC
   SDL_PumpEvents();
   const Uint8 *state =
     SDL_GetKeyboardState(NULL);
@@ -7838,6 +7848,7 @@ void keyboard() {
     keystate |= 0x40000;
   else
     keystate &= ~0x40000;
+#endif
 }
 
 void mirrorWholeHoriz(Uint32 target[][whole0Length]) {
@@ -7865,7 +7876,6 @@ void newBoard() {
 
 void newWhole(Uint32 newWholeX[][whole0Length]) {
   int r = randomRange(0, 999);
-  string s = sample7.substr(r * 49, 49); //TODO hardcoded
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length; ++j) {
       newWholeX[i][j] = bgcolor;
@@ -7873,7 +7883,7 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
   }
   for (int i = 0; i < 7; ++i) { //TODO hardcoded
     for(int j = 0; j < 7; ++j) {
-      if (s.at(i * 7 + j) == '1')
+      if (sample7[r * 49 + (i * 7 + j)] == '1')
         newWholeX[i][j] = colorme;
     }
   }
@@ -8088,6 +8098,7 @@ int randomRange(int min, int max) {
 }
 
 void renderBoard() {
+#ifdef PLATFORM_PC
   SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
   SDL_RenderClear(renderer);
   boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
@@ -8137,6 +8148,7 @@ void renderBoard() {
       }
     }
   }
+#endif
 }
 
 void renderUi() {
@@ -8279,7 +8291,9 @@ Uint32 update(Uint32 interval, void *param) {
     renderTimer = renderTimeout;
     renderBoard();
     renderUi();
+#ifdef PLATFORM_PC
     SDL_RenderPresent(renderer);
+#endif
   }
   param = param; // To suppress warning;
   keystateprev = keystate;
@@ -8291,6 +8305,7 @@ int main(int argc, char **argv) {
   argc = argc; // To suppress warning
   argv = argv; // To suppress warning
   srand(time_t(time(0)));
+#ifdef PLATFORM_PC
   SDL_Init(SDL_INIT_VIDEO);
   atexit(SDL_Quit);
   screen = SDL_CreateWindow("My Game Window", SDL_WINDOWPOS_UNDEFINED,
@@ -8300,8 +8315,10 @@ int main(int argc, char **argv) {
   // TODO if (renderer == null)
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize(renderer, 1824, 984);
+#endif
   boardCoord.col = 1824 / 2 - board0Length * blockwidth / 2;
   boardCoord.row = 984 / 2 - boardLength * blockwidth / 2;
+#ifdef PLATFORM_PC
   if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
     bgcolor = SDL_Swap32(bgcolor);
     red = SDL_Swap32(red);
@@ -8319,6 +8336,7 @@ int main(int argc, char **argv) {
   }
   else
     printf("Could not determine endianness\n");
+#endif
 
 // TODO destroy window release renderer.
 // Here's orig main.
@@ -8326,7 +8344,9 @@ int main(int argc, char **argv) {
   newBoard();
   newWhole(whole);
   colorWhole();
+#ifdef PLATFORM_PC
   SDL_AddTimer(updateInterval, update, &noParam);
+#endif
   while(true)
     keyboard();
 }

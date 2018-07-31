@@ -1,5 +1,4 @@
-#include <string>
-std::string sample7 = 
+char sample7[] = 
 "0000000"\
 "0000000"\
 "0000000"\
