@@ -7005,7 +7005,6 @@ std::string sample7 =
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <set>
-#include <vector>
 #include <cstdlib>
 #include <ctime>
 
@@ -7121,7 +7120,7 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 void corridorClocks(Uint32 potentialWhole[][whole0Length]);
 void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
-vector<Coord> getAdjOccupied(Coord coords);
+int getAdjOccupied(Coord coords, Coord adj[]);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
 int getClockDirection(const Coord &center, const Coord &d);
 Coord getCoords(Uint32 color);
@@ -7323,10 +7322,11 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
 
   corridorClocks(whole); // This stays up top... called once
 
-  vector<Coord> adjCoords = getAdjOccupied(curCoords);
+  Coord adjCoords[4];
+  int adjCoordsSize = getAdjOccupied(curCoords, adjCoords);
 
-  if (adjCoords.size() < 4) {
-    for (unsigned int i = 0; i < adjCoords.size(); ++i) {
+  if (adjCoordsSize < 4) {
+    for (unsigned int i = 0; i < adjCoordsSize; ++i) {
       int clockDirection = getClockDirection(adjCoords[i], curCoords);
       if (clockDirection == -1)
         continue;
@@ -7583,18 +7583,17 @@ void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) 
   }
 }
 
-vector<Coord> getAdjOccupied(Coord coords) {
-  vector<Coord> ret;
-  
+int getAdjOccupied(Coord coords, Coord adj[]) {
+  int idx=0;
   if (isOpen( { .row = coords.row - 1, .col = coords.col }, whole, wholecoord) == false)
-    ret.push_back( { .row = coords.row - 1, .col = coords.col} );
+    adj[idx++] = { .row = coords.row - 1, .col = coords.col };
   if (isOpen( { .row = coords.row + 1, .col = coords.col }, whole, wholecoord) == false)
-    ret.push_back( { .row = coords.row + 1, .col = coords.col} );
+    adj[idx++] = { .row = coords.row + 1, .col = coords.col};
   if (isOpen( { .row = coords.row, .col = coords.col - 1}, whole, wholecoord) == false)
-    ret.push_back( { .row = coords.row, .col = coords.col - 1} );
+    adj[idx++] = { .row = coords.row, .col = coords.col - 1};
   if (isOpen( { .row = coords.row, .col = coords.col + 1}, whole, wholecoord) == false)
-    ret.push_back( { .row = coords.row, .col = coords.col + 1} );
-  return ret;
+    adj[idx++] = { .row = coords.row, .col = coords.col + 1};
+  return idx;
 }
 
 Coord getCenterCoords(Uint32 target[][whole0Length]) {
@@ -8067,15 +8066,16 @@ void proc(Uint32 interval) {
 }
 
 Coord randomColorMe(Uint32 potentialWhole[][whole0Length]) {
-  vector<Coord> colorMes;
+  int size=0;
+  Coord colorMes[169]; // wholeLength * whole0Length 13*13;
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length; ++j) {
       if (potentialWhole[i][j] == colorme) {
-        colorMes.push_back( { .row = i, .col = j } );
+        colorMes[size++] = { .row = i, .col = j };
       }
     }
   }
-  return colorMes[randomRange(0, colorMes.size() - 1)];
+  return colorMes[randomRange(0, size - 1)];
 }
 
 int randomRange(int min, int max) {
