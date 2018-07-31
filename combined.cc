@@ -7000,7 +7000,6 @@ std::string sample7 =
 "0111000"\
 "0010000"\
 "0000000";
-#include <dlfcn.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
 #include <cstdlib>
