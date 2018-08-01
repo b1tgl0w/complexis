@@ -114,7 +114,7 @@ int renderTimer = static_cast<int>(renderTimeout);
 #ifdef PLATFORM_PC
 SDL_Window *screen;
 #endif
-int updateInterval = 12;
+Uint32 updateInterval = 12;
 Coord wholecoord = Coord(0, 0);
 const int wholeLength = 13;
 const int whole0Length = 13;
@@ -164,7 +164,7 @@ Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length
 Coord getPotentialCoords(const Coord & coords, int clockDirection);
 bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]);
 bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]);
-bool inMoreSimilarDirectionAsPrev(Uint32 clockDirection, Uint32 newCoordsDirection, int prevDirectionMain,
+bool inMoreSimilarDirectionAsPrev(int clockDirection, int newCoordsDirection, int prevDirectionMain,
   int prevDirectionSecondary);
 bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
 void keyboard();
@@ -172,7 +172,7 @@ void mirrorWholeHoriz(Uint32 target[][whole0Length]);
 void newBoard();
 void newWhole(Uint32 newWholeX[][whole0Length]);
 int oppositeClock(int clockDirection);
-void proc();
+void proc(Uint32 interval);
 Coord randomColorMe(Uint32 potentialWhole[][whole0Length]);
 int randomRange(int min, int max);
 void renderBoard();
@@ -748,41 +748,41 @@ bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
   return false;
 }
 
-bool inMoreSimilarDirectionAsPrev(Uint32 defendingChampionDirection, Uint32 contenderDirection, int prevDirectionMain,
 // TODO jminer get rid of this function
-  int prevDirectionSecondary) {
-  if (prevDirectionMain < 0)
+bool inMoreSimilarDirectionAsPrev(int defendingChampionDirection, int contenderDirection, int prevDirectionMainEx,
+  int prevDirectionSecondaryEx) {
+  if (prevDirectionMainEx < 0)
     return true;
-  if (contenderDirection == prevDirectionMain 
-    || contenderDirection == clockwise(true, prevDirectionMain)
-    || contenderDirection == clockwise(false, prevDirectionMain))
+  if (contenderDirection == prevDirectionMainEx
+    || contenderDirection == clockwise(true, prevDirectionMainEx)
+    || contenderDirection == clockwise(false, prevDirectionMainEx))
     return true;
-  if (defendingChampionDirection == prevDirectionMain 
-    || defendingChampionDirection == clockwise(true, prevDirectionMain)
-    || defendingChampionDirection == clockwise(false, prevDirectionMain))
+  if (defendingChampionDirection == prevDirectionMainEx
+    || defendingChampionDirection == clockwise(true, prevDirectionMainEx)
+    || defendingChampionDirection == clockwise(false, prevDirectionMainEx))
     return false;
-  if (prevDirectionSecondary < 0)
+  if (prevDirectionSecondaryEx < 0)
     return true;
-  if (contenderDirection == prevDirectionSecondary
-    || contenderDirection == clockwise(true, prevDirectionSecondary)
-    || contenderDirection == clockwise(false, prevDirectionSecondary))
+  if (contenderDirection == prevDirectionSecondaryEx
+    || contenderDirection == clockwise(true, prevDirectionSecondaryEx)
+    || contenderDirection == clockwise(false, prevDirectionSecondaryEx))
     return true;
   return false;
 }
 
-bool isOpen(const Coord & piececoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord) {
+bool isOpen(const Coord & piececoords, Uint32 potentialWhole[][whole0Length], const Coord & wholeCoords) {
   if (piececoords.col < 0 || piececoords.row < 0)
     return false;
-  if (piececoords.col + wholecoord.col < 0)
+  if (piececoords.col + wholeCoords.col < 0)
     return false;
-  if (piececoords.row + wholecoord.row < 0)
+  if (piececoords.row + wholeCoords.row < 0)
     return false;
-  if (piececoords.col + wholecoord.col >= board0Length)
+  if (piececoords.col + wholeCoords.col >= board0Length)
     return false;
-  if (piececoords.row + wholecoord.row >= boardLength)
+  if (piececoords.row + wholeCoords.row >= boardLength)
     return false;
 
-  if (board[piececoords.row + wholecoord.row][piececoords.col + wholecoord.col])
+  if (board[piececoords.row + wholeCoords.row][piececoords.col + wholeCoords.col])
     return false;
 
   return potentialWhole[piececoords.row][piececoords.col] == bgcolor;
@@ -1229,9 +1229,9 @@ void rotateWhole(bool cwTrueCcwFalse) {
   }
 }
 
-Coord shadow(Uint32 whole[][whole0Length], const Coord &coords) {
+Coord shadow(Uint32 wholeCoords[][whole0Length], const Coord &coords) {
   Uint32 clone[wholeLength][whole0Length];
-  cloneWhole(whole, clone);
+  cloneWhole(wholeCoords, clone);
   Coord ret = Coord(coords.row, coords.col);
   bool loop = true;
   while(loop == true) {
@@ -1318,7 +1318,7 @@ Uint32 update(Uint32 interval, void *param) {
   proc(interval);
   renderTimer -= static_cast<int>(interval & 0x7fffffff);
   if (renderTimer < 0) {
-    renderTimer = renderTimeout;
+    renderTimer = static_cast<int>(renderTimeout & 0x7fffffff);
     renderBoard();
     renderUi();
 #ifdef PLATFORM_PC
