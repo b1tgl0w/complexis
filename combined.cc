@@ -8085,7 +8085,7 @@ void proc(Uint32 interval) {
     }
   }
   else {
-    gravityTimer -= interval;
+    gravityTimer -= static_cast<int>(interval & 0x7fffffff);
     if (gravityTimer < 0) {
       gravityTimer += gravityTimeout;
       ++wholecoord.row;
@@ -8308,16 +8308,16 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translat
   }
 }
 Uint32 update(Uint32 interval, void *param) {
-  moveTimerRed -= interval;
-  moveTimerOrange -= interval;
-  moveTimerYellow -= interval;
-  moveTimerGreen -= interval;
-  moveTimerBlue -= interval;
-  moveTimerDown -= interval;
-  moveTimerLeft -= interval;
-  moveTimerRight -= interval;
+  moveTimerRed -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerOrange -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerYellow -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerGreen -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerBlue -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerDown -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerLeft -= static_cast<int>(interval & 0x7fffffff);
+  moveTimerRight -=static_cast<int>(interval & 0x7fffffff);
   proc(interval);
-  renderTimer -= interval;
+  renderTimer -= static_cast<int>(interval & 0x7fffffff);
   if (renderTimer < 0) {
     renderTimer = renderTimeout;
     renderBoard();
