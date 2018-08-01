@@ -801,8 +801,8 @@ void keyboard() {
     keystate |= 0x2;
   if((!state[SDL_SCANCODE_1] && !state[SDL_SCANCODE_Q])
     || (state[SDL_SCANCODE_1] && state[SDL_SCANCODE_Q])) {
-    keystate &= ~0x1;
-    keystate &= ~0x2;
+    keystate &= ~static_cast<Uint32>(0x1);
+    keystate &= ~static_cast<Uint32>(0x2);
   }
   if(state[SDL_SCANCODE_2])
     keystate |= 0x4;
@@ -810,8 +810,8 @@ void keyboard() {
     keystate |= 0x8;
   if((!state[SDL_SCANCODE_2] && !state[SDL_SCANCODE_W])
     || (state[SDL_SCANCODE_2] && state[SDL_SCANCODE_W])) {
-    keystate &= ~0x4;
-    keystate &= ~0x8;
+    keystate &= ~static_cast<Uint32>(0x4);
+    keystate &= ~static_cast<Uint32>(0x8);
   }
   if(state[SDL_SCANCODE_3])
     keystate |= 0x10;
@@ -819,8 +819,8 @@ void keyboard() {
     keystate |= 0x20;
   if((!state[SDL_SCANCODE_3] && !state[SDL_SCANCODE_E])
     || (state[SDL_SCANCODE_3] && state[SDL_SCANCODE_E])) {
-    keystate &= ~0x10;
-    keystate &= ~0x20;
+    keystate &= ~static_cast<Uint32>(0x10);
+    keystate &= ~static_cast<Uint32>(0x20);
   }
   if(state[SDL_SCANCODE_4])
     keystate |= 0x40;
@@ -828,8 +828,8 @@ void keyboard() {
     keystate |= 0x80;
   if((!state[SDL_SCANCODE_4] && !state[SDL_SCANCODE_R])
     || (state[SDL_SCANCODE_4] && state[SDL_SCANCODE_R])) {
-    keystate &= ~0x40;
-    keystate &= ~0x80;
+    keystate &= ~static_cast<Uint32>(0x40);
+    keystate &= ~static_cast<Uint32>(0x80);
   }
   if(state[SDL_SCANCODE_5])
     keystate |= 0x100;
@@ -837,8 +837,8 @@ void keyboard() {
     keystate |= 0x200;
   if((!state[SDL_SCANCODE_5] && !state[SDL_SCANCODE_T])
     || (state[SDL_SCANCODE_5] && state[SDL_SCANCODE_T])) {
-    keystate &= ~0x100;
-    keystate &= ~0x200;
+    keystate &= ~static_cast<Uint32>(0x100);
+    keystate &= ~static_cast<Uint32>(0x200);
   }
   if(state[SDL_SCANCODE_6])
     keystate |= 0x400;
@@ -846,8 +846,8 @@ void keyboard() {
     keystate |= 0x800;
   if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
     || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y])) {
-    keystate &= ~0x400;
-    keystate &= ~0x800;
+    keystate &= ~static_cast<Uint32>(0x400);
+    keystate &= ~static_cast<Uint32>(0x800);
   }
   if(state[SDL_SCANCODE_6])
     keystate |= 0x1000;
@@ -855,29 +855,29 @@ void keyboard() {
     keystate |= 0x2000;
   if((!state[SDL_SCANCODE_6] && !state[SDL_SCANCODE_Y])
     || (state[SDL_SCANCODE_6] && state[SDL_SCANCODE_Y])) {
-    keystate &= ~0x1000;
-    keystate &= ~0x2000;
+    keystate &= ~static_cast<Uint32>(0x1000);
+    keystate &= ~static_cast<Uint32>(0x2000);
   }
   if(state[SDL_SCANCODE_UP])
     keystate |= 0x4000;
   else
-    keystate &= ~0x4000;
+    keystate &= ~static_cast<Uint32>(0x4000);
   if(state[SDL_SCANCODE_DOWN])
     keystate |= 0x8000;
   else
-    keystate &= ~0x8000;
+    keystate &= ~static_cast<Uint32>(0x8000);
   if(state[SDL_SCANCODE_LEFT])
     keystate |= 0x10000;
   else
-    keystate &= ~0x10000;
+    keystate &= ~static_cast<Uint32>(0x10000);
   if(state[SDL_SCANCODE_RIGHT])
     keystate |= 0x20000;
   else
-    keystate &= ~0x20000;
+    keystate &= ~static_cast<Uint32>(0x20000);
   if(state[SDL_SCANCODE_SPACE])
     keystate |= 0x40000;
   else
-    keystate &= ~0x40000;
+    keystate &= ~static_cast<Uint32>(0x40000);
 #endif
 }
 
