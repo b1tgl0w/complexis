@@ -635,6 +635,7 @@ void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) 
   }
 }
 
+#ifdef PLATFORM_DC
 void drawSquare(const Bounds &b, int z, Uint32 color) {
   pvr_vertex_t vert;
   vert.flags = PVR_CMD_VERTEX;
@@ -659,6 +660,7 @@ void drawSquare(const Bounds &b, int z, Uint32 color) {
   vert.argb = 0xffff0000;
   pvr_prim(&vert, sizeof(vert));
 }
+#endif /* PLATFORM_DC */
 
 int getAdjOccupied(Coord coords, Coord adj[]) {
   int idx=0;
