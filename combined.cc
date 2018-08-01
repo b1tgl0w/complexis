@@ -7009,6 +7009,10 @@ typedef unsigned int Uint32; //TODO For now
 
 #include <cstdlib>
 #include <ctime>
+#ifdef PLATFORM_DC
+#include <stdio.h>
+#include <dc/pvr.h>
+#endif
 
 using namespace std;
 
@@ -7158,6 +7162,9 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 void corridorClocks(Uint32 potentialWhole[][whole0Length]);
 void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
+#ifdef PLATFORM_DC
+void drawSquare(const Bounds &b, int z, Uint32 color);
+#endif /* PLATFORM_DC */
 int getAdjOccupied(Coord coords, Coord adj[]);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
 int getClockDirection(const Coord &center, const Coord &d);
@@ -7627,6 +7634,31 @@ void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) 
     a = b;
     b = tmp;
   }
+}
+
+void drawSquare(const Bounds &b, int z, Uint32 color) {
+  pvr_vertex_t vert;
+  vert.flags = PVR_CMD_VERTEX;
+  vert.x = b.left;
+  vert.y = b.top + (b.bottom - b.top);
+  vert.z = z;
+  vert.u = vert.v = 0.0f;
+  vert.oargb = 0;
+  pvr_prim(&vert, sizeof(vert));
+
+  vert.y = b.top;
+  vert.argb = 0xff00ff00;
+  pvr_prim(&vert, sizeof(vert));
+
+  vert.x = b.left + (b.right - b.left);
+  vert.y = b.top + (b.bottom - b.top);
+  vert.argb = 0xff000000;
+  pvr_prim(&vert, sizeof(vert));
+
+  vert.flags = PVR_CMD_VERTEX_EOL;
+  vert.y = b.top;
+  vert.argb = 0xffff0000;
+  pvr_prim(&vert, sizeof(vert));
 }
 
 int getAdjOccupied(Coord coords, Coord adj[]) {
@@ -8180,7 +8212,27 @@ void renderBoard() {
       }
     }
   }
-#endif
+#endif /* PLATFORM_PC */
+#ifdef PLATFORM_DC
+  pvr_poly_cxt_t cxt;
+  pvr_poly_hdr_t poly;
+
+  pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
+  pvr_poly_compile(&poly, &cxt);
+
+  pvr_wait_ready();
+
+  pvr_scene_begin();
+  pvr_list_begin(PVR_LIST_OP_POLY);
+  pvr_prim(&poly, sizeof(poly));
+
+  Bounds tempBounds(0, 0, 250, 250);
+  drawSquare(tempBounds, 1, 0xff00ff00);
+
+  pvr_list_finish();
+  pvr_scene_finish();
+
+#endif /* PLATFORM_DC */
 }
 
 void renderUi() {
@@ -8332,6 +8384,14 @@ Uint32 update(Uint32 interval, void *param) {
   return interval;
 }
 
+#ifdef PLATFORM_DC
+pvr_init_params_t pvr_params = {
+  { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0,
+    PVR_BINSIZE_0, PVR_BINSIZE_0 },
+  64 * 1024
+};
+#endif /* PLATFORM_DC */
+
 int main(int argc, char **argv) {
 // TODO wiki.libsdl.org create window "you must set the nshighresolutioncapable info.plist property to YES" on mac.
   argc = argc; // To suppress warning
@@ -8370,6 +8430,14 @@ int main(int argc, char **argv) {
     printf("Could not determine endianness\n");
 #endif
 
+#ifdef PLATFORM_DC
+  //uint64 timer = timer_ms_gettime64(), start, end;
+  pvr_stats_t stats;
+  pvr_init(&pvr_params);
+  pvr_set_bg_color(1.0f, 1.0f, 1.0f);
+  //start = timer_ms_gettime64();
+#endif /* PLATFORM_DC */
+
 // TODO destroy window release renderer.
 // Here's orig main.
 // TODO Assert whole length and width.
@@ -8378,7 +8446,16 @@ int main(int argc, char **argv) {
   colorWhole();
 #ifdef PLATFORM_PC
   SDL_AddTimer(updateInterval, update, &noParam);
-#endif
   while(true)
     keyboard();
+#endif
+#ifdef PLATFORM_DC
+    //while(true)
+      renderBoard();
+    pvr_get_stats(&stats);
+    printf("From pvr_get_stats:\n\tVBlank Count: %lu\n\tFrame Count: %lu\n",
+           stats.vbl_count, stats.frame_count);
+    pvr_shutdown();
+#endif
+  return 0;
 }
