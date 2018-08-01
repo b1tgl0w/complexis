@@ -7044,7 +7044,7 @@ struct Coord {
   Coord(const Coord &rhs);
   Coord &operator=(const Coord &rhs);
 };
-Coord::Coord() : row(0), col(0) {};
+Coord::Coord() : row(0), col(0) {}
 Coord::Coord(const int &r, const int &c) : row(r), col(c) {}
 Coord::Coord(const Coord &rhs) : row(rhs.row), col(rhs.col) {}
 Coord &Coord::operator=(const Coord &rhs) {
@@ -7111,7 +7111,7 @@ bool redInCorridor = false;
 SDL_Renderer *renderer;
 #endif
 Uint32 renderTimeout = 12;
-int renderTimer = renderTimeout;
+int renderTimer = static_cast<int>(renderTimeout);
 #ifdef PLATFORM_PC
 SDL_Window *screen;
 #endif
@@ -7147,7 +7147,7 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element);
 bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
 Bounds bounds(Uint32 target[][whole0Length]);
 void capitalizeRows();
-void centerWhole(Uint32 target[][whole0Length]);
+void centerWhole(Uint32 target[][whole0Length], bool translate);
 void clockMove(Uint32 color, bool cwTrueCcwFalse);
 int clockwise(bool cw, int clockDirection);
 void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]);
