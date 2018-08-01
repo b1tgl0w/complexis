@@ -142,7 +142,8 @@ bool yellowInCorridor = false;
 Uint32 blockcolors[9] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4 };
 
 void applyWhole();
-bool arrayHas(Uint32 ar[], int size, Uint32 element);
+bool arrayHas(Uint32 ar[], int size, Uint32 element); // TODO which overload is used?
+bool arrayHas(int a[], int size, int search); // TODO which overload is used?
 bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
 Bounds bounds(Uint32 target[][whole0Length]);
 void capitalizeRows();
@@ -354,7 +355,7 @@ void centerWhole(Uint32 target[][whole0Length], bool translate) {
 void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   Coord curCoords = getCoords(color);
   Coord newCoords(curCoords.row, curCoords.col);
-  Uint32 newCoordsDirection = -1;
+  int newCoordsDirection = -1;
 
   corridorClocks(whole); // This stays up top... called once
 
@@ -362,7 +363,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   int adjCoordsSize = getAdjOccupied(curCoords, adjCoords);
 
   if (adjCoordsSize < 4) {
-    for (unsigned int i = 0; i < adjCoordsSize; ++i) {
+    for (int i = 0; i < adjCoordsSize; ++i) {
       int clockDirection = getClockDirection(adjCoords[i], curCoords);
       if (clockDirection == -1)
         continue;
@@ -642,7 +643,7 @@ int getAdjOccupied(Coord coords, Coord adj[]) {
 
 Coord getCenterCoords(Uint32 target[][whole0Length]) {
   Bounds b = bounds(target);
-  return Coord((int) ((b.bottom - b.top) / 2 + b.top), (int) ((b.right - b.left) / 2 + b.left));
+  return Coord(static_cast<int>(((b.bottom - b.top) / 2 + b.top)), static_cast<int>(((b.right - b.left) / 2 + b.left)));
 }
 
 int getClockDirection(const Coord &center, const Coord &d) {
@@ -729,20 +730,20 @@ Coord getPotentialCoords(const Coord & coords, int clockDirection) {
   return Coord(y, x);
 }
 
-bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]) {
-  return inCorridor(getCoords(color), whole);
+bool inCorridor(Uint32 color, Uint32 wholeEx[][whole0Length]) {
+  return inCorridor(getCoords(color), wholeEx);
 }
 
-bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
+bool inCorridor(const Coord &coords, Uint32 wholeEx[][whole0Length]) {
   Coord coordsA = Coord(coords.row, coords.col - 1);
   Coord coordsB = Coord(coords.row, coords.col + 1);
   Coord coordsC = Coord(coords.row - 1, coords.col);
   Coord coordsD = Coord(coords.row + 1, coords.col);
-  if(isOpen(coordsA, whole, wholecoord) && isOpen(coordsB, whole, wholecoord)
-    && !isOpen(coordsC, whole, wholecoord) && !isOpen(coordsD, whole, wholecoord))
+  if(isOpen(coordsA, wholeEx, wholecoord) && isOpen(coordsB, wholeEx, wholecoord)
+    && !isOpen(coordsC, wholeEx, wholecoord) && !isOpen(coordsD, wholeEx, wholecoord))
     return true;
-  if(isOpen(coordsC, whole, wholecoord) && isOpen(coordsD, whole, wholecoord)
-    && !isOpen(coordsA, whole, wholecoord) && !isOpen(coordsB, whole, wholecoord))
+  if(isOpen(coordsC, wholeEx, wholecoord) && isOpen(coordsD, wholeEx, wholecoord)
+    && !isOpen(coordsA, wholeEx, wholecoord) && !isOpen(coordsB, wholeEx, wholecoord))
     return true;
 // TODO does isOpen check all of adjacent blocks, concreted blocks, and boundaries?
   return false;
