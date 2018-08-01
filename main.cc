@@ -16,19 +16,50 @@ struct Bounds {
   int right;
   int top;
   int bottom;
+  Bounds();
+  Bounds(const int &l, const int &r, const int &t, const int &b);
+  Bounds(const Bounds &rhs);
+  Bounds &operator=(const Bounds &rhs);
 };
+Bounds::Bounds() : left(0), right(0), top(0), bottom(0) {}
+Bounds::Bounds(const int &l, const int &r, const int &t, const int &b) :
+  left(l), right(r), top(t), bottom(b) {}
+Bounds::Bounds(const Bounds &rhs) : left(rhs.left), right(rhs.right), top(rhs.top), bottom(rhs.bottom) {}
+Bounds &Bounds::operator=(const Bounds &rhs) {
+  if (this == &rhs)
+    return *this;
+  left = rhs.left;
+  right = rhs.right;
+  top = rhs.top;
+  bottom = rhs.bottom;
+  return *this;
+}
 
 struct Coord {
   int row;
   int col;
+  Coord();
+  Coord(const int &r, const int &c);
+  Coord(const Coord &rhs);
+  Coord &operator=(const Coord &rhs);
 };
+Coord::Coord() : row(0), col(0) {};
+Coord::Coord(const int &r, const int &c) : row(r), col(c) {}
+Coord::Coord(const Coord &rhs) : row(rhs.row), col(rhs.col) {}
+Coord &Coord::operator=(const Coord &rhs) {
+  if (this==&rhs)
+    return *this;
+  row=rhs.row;
+  col=rhs.col;
+  return *this;
+}
 
 Uint32 bgcolor = 0xffa7a7a7; //"hsl(50, 7%, 97%)";
 int blockclocks [5] = { 6, 9, 3, 12, 12 };
 const int blockwidth = 25;
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
 bool blueInCorridor = false;
-Coord boardCoord;
+Coord boardCoord(0, 0);
 const int boardLength = 34;
 const int board0Length = 19;
 bool board[boardLength][board0Length]; //TODO
@@ -84,7 +115,7 @@ int renderTimer = renderTimeout;
 SDL_Window *screen;
 #endif
 int updateInterval = 12;
-Coord wholecoord = { .row = 0, .col = 0 };
+Coord wholecoord = Coord(0, 0);
 const int wholeLength = 13;
 const int whole0Length = 13;
 Uint32 whole[wholeLength][whole0Length] = {
@@ -226,7 +257,7 @@ Bounds bounds(Uint32 target[][whole0Length]) {
     }
   }
   
-  return { .left = minx, .right = maxx, .top = miny, .bottom = maxy };
+  return Bounds(minx, maxx, miny, maxy);
 }
 
 void capitalizeRows() {
@@ -322,7 +353,7 @@ void centerWhole(Uint32 target[][whole0Length], bool translate) {
 
 void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   Coord curCoords = getCoords(color);
-  Coord newCoords = { .row = curCoords.row, .col = curCoords.col };
+  Coord newCoords(curCoords.row, curCoords.col);
   Uint32 newCoordsDirection = -1;
 
   corridorClocks(whole); // This stays up top... called once
@@ -598,20 +629,20 @@ void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) 
 
 int getAdjOccupied(Coord coords, Coord adj[]) {
   int idx=0;
-  if (isOpen( { .row = coords.row - 1, .col = coords.col }, whole, wholecoord) == false)
-    adj[idx++] = { .row = coords.row - 1, .col = coords.col };
-  if (isOpen( { .row = coords.row + 1, .col = coords.col }, whole, wholecoord) == false)
-    adj[idx++] = { .row = coords.row + 1, .col = coords.col};
-  if (isOpen( { .row = coords.row, .col = coords.col - 1}, whole, wholecoord) == false)
-    adj[idx++] = { .row = coords.row, .col = coords.col - 1};
-  if (isOpen( { .row = coords.row, .col = coords.col + 1}, whole, wholecoord) == false)
-    adj[idx++] = { .row = coords.row, .col = coords.col + 1};
+  if (isOpen( Coord(coords.row - 1, coords.col), whole, wholecoord) == false)
+    adj[idx++] = Coord(coords.row - 1, coords.col);
+  if (isOpen( Coord(coords.row + 1, coords.col), whole, wholecoord) == false)
+    adj[idx++] = Coord(coords.row + 1, coords.col);
+  if (isOpen( Coord(coords.row, coords.col - 1), whole, wholecoord) == false)
+    adj[idx++] = Coord(coords.row, coords.col - 1);
+  if (isOpen( Coord(coords.row, coords.col + 1), whole, wholecoord) == false)
+    adj[idx++] = Coord(coords.row, coords.col + 1);
   return idx;
 }
 
 Coord getCenterCoords(Uint32 target[][whole0Length]) {
   Bounds b = bounds(target);
-  return { .row = (int) ((b.bottom - b.top) / 2 + b.top), .col = (int) ((b.right - b.left) / 2 + b.left) };
+  return Coord((int) ((b.bottom - b.top) / 2 + b.top), (int) ((b.right - b.left) / 2 + b.left));
 }
 
 int getClockDirection(const Coord &center, const Coord &d) {
@@ -652,12 +683,12 @@ Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
       if(potentialWhole[i][j] == color)
-        return { .row = i, .col = j };
+        return Coord(i, j);
     }
   }
 
   //TODO jminer
-  return { .row = -1, .col = -1 };
+  return Coord(-1, -1);
 }
 
 Coord getPotentialCoords(const Coord & coords, int clockDirection) {
@@ -695,7 +726,7 @@ Coord getPotentialCoords(const Coord & coords, int clockDirection) {
   if (x < 0 || x >= whole0Length)
     x = -1;
 
-  return { .row = y, .col = x };
+  return Coord(y, x);
 }
 
 bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]) {
@@ -703,10 +734,10 @@ bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]) {
 }
 
 bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]) {
-  Coord coordsA = { .row = coords.row, .col = coords.col - 1 };
-  Coord coordsB = { .row = coords.row, .col = coords.col + 1 };
-  Coord coordsC = { .row = coords.row - 1, .col = coords.col };
-  Coord coordsD = { .row = coords.row + 1, .col = coords.col, };
+  Coord coordsA = Coord(coords.row, coords.col - 1);
+  Coord coordsB = Coord(coords.row, coords.col + 1);
+  Coord coordsC = Coord(coords.row - 1, coords.col);
+  Coord coordsD = Coord(coords.row + 1, coords.col);
   if(isOpen(coordsA, whole, wholecoord) && isOpen(coordsB, whole, wholecoord)
     && !isOpen(coordsC, whole, wholecoord) && !isOpen(coordsD, whole, wholecoord))
     return true;
@@ -990,7 +1021,7 @@ void proc(Uint32 interval) {
         if (whole[i][j] != bgcolor) {
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
-          if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false)
+          if(isOpen(Coord(i, j), whole, wholecoord) == false)
             --wholecoord.col;
           whole[i][j] = color;
         }
@@ -1005,7 +1036,7 @@ void proc(Uint32 interval) {
         if (whole[i][j] != bgcolor) {
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
-          if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false)
+          if(isOpen(Coord(i, j), whole, wholecoord) == false)
             ++wholecoord.col;
           whole[i][j] = color;
         }
@@ -1023,7 +1054,7 @@ void proc(Uint32 interval) {
           if (whole[i][j] != bgcolor) {
             Uint32 color = whole[i][j];
             whole[i][j] = bgcolor;
-            if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false) {
+            if(isOpen(Coord(i, j), whole, wholecoord) == false) {
               --wholecoord.row;
               hit = true;
               apply = true;
@@ -1043,7 +1074,7 @@ void proc(Uint32 interval) {
         if (whole[i][j] != bgcolor) {
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
-          if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false) {
+          if(isOpen(Coord(i, j), whole, wholecoord) == false) {
             --wholecoord.row;
             apply = true;
           }
@@ -1062,7 +1093,7 @@ void proc(Uint32 interval) {
           if (whole[i][j] != bgcolor) {
             Uint32 color = whole[i][j];
             whole[i][j] = bgcolor;
-            if(isOpen({ .row = i, .col = j}, whole, wholecoord) == false) {
+            if(isOpen(Coord(i, j), whole, wholecoord) == false) {
               --wholecoord.row;
               apply = true;
             }
@@ -1085,7 +1116,7 @@ Coord randomColorMe(Uint32 potentialWhole[][whole0Length]) {
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length; ++j) {
       if (potentialWhole[i][j] == colorme) {
-        colorMes[size++] = { .row = i, .col = j };
+        colorMes[size++] = Coord(i, j);
       }
     }
   }
@@ -1182,7 +1213,7 @@ void rotateWhole(bool cwTrueCcwFalse) {
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length; ++j) {
       if (potentialWhole[i][j] != bgcolor
-        && isOpen( { .row = i, .col = j }, emptyWhole, wholecoord) == false)
+        && isOpen( Coord(i, j), emptyWhole, wholecoord) == false)
         open = false;
     }
   }
@@ -1201,7 +1232,7 @@ void rotateWhole(bool cwTrueCcwFalse) {
 Coord shadow(Uint32 whole[][whole0Length], const Coord &coords) {
   Uint32 clone[wholeLength][whole0Length];
   cloneWhole(whole, clone);
-  Coord ret = { .row = coords.row, .col = coords.col };
+  Coord ret = Coord(coords.row, coords.col);
   bool loop = true;
   while(loop == true) {
     ret.row++;
