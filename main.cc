@@ -640,9 +640,10 @@ void drawSquare(const Bounds &b, int z, Uint32 color) {
   pvr_vertex_t vert;
   vert.flags = PVR_CMD_VERTEX;
   vert.x = b.left;
-  vert.y = b.top + (b.bottom - b.top);
+  vert.y = b.bottom;
   vert.z = z;
   vert.u = vert.v = 0.0f;
+  vert.argb = 0xff0000ff;
   vert.oargb = 0;
   pvr_prim(&vert, sizeof(vert));
 
@@ -650,8 +651,8 @@ void drawSquare(const Bounds &b, int z, Uint32 color) {
   vert.argb = 0xff00ff00;
   pvr_prim(&vert, sizeof(vert));
 
-  vert.x = b.left + (b.right - b.left);
-  vert.y = b.top + (b.bottom - b.top);
+  vert.x = b.right;
+  vert.y = b.bottom;
   vert.argb = 0xff000000;
   pvr_prim(&vert, sizeof(vert));
 
@@ -1227,8 +1228,8 @@ void renderBoard() {
   pvr_list_begin(PVR_LIST_OP_POLY);
   pvr_prim(&poly, sizeof(poly));
 
-  Bounds tempBounds(0, 0, 250, 250);
-  drawSquare(tempBounds, 1, 0xff00ff00);
+  Bounds tempBounds(0, 0, 31, 31);
+  drawSquare(tempBounds, 2, 0xff00ff00);
 
   pvr_list_finish();
   pvr_scene_finish();
@@ -1389,7 +1390,7 @@ Uint32 update(Uint32 interval, void *param) {
 pvr_init_params_t pvr_params = {
   { PVR_BINSIZE_16, PVR_BINSIZE_0, PVR_BINSIZE_0,
     PVR_BINSIZE_0, PVR_BINSIZE_0 },
-  64 * 1024
+  512 * 1024
 };
 #endif /* PLATFORM_DC */
 
@@ -1435,7 +1436,7 @@ int main(int argc, char **argv) {
   //uint64 timer = timer_ms_gettime64(), start, end;
   pvr_stats_t stats;
   pvr_init(&pvr_params);
-  pvr_set_bg_color(1.0f, 1.0f, 1.0f);
+  pvr_set_bg_color(.5f, .8f, .3f);
   //start = timer_ms_gettime64();
 #endif /* PLATFORM_DC */
 
@@ -1451,7 +1452,7 @@ int main(int argc, char **argv) {
     keyboard();
 #endif
 #ifdef PLATFORM_DC
-    //while(true)
+    while(true)
       renderBoard();
     pvr_get_stats(&stats);
     printf("From pvr_get_stats:\n\tVBlank Count: %lu\n\tFrame Count: %lu\n",
