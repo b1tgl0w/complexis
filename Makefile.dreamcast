@@ -7,15 +7,67 @@
 
 all: dc-post-build
 
-BIN = complexis
-OBJS = combined.o
+BIN = obj/complexis-dc
+OBJS = obj/combined-dc.o
 TARGET = $(BIN).elf
 
-include $(KOS_BASE)/Makefile.rules
+# Global KallistiOS Makefile include
+
+# Build rules
+ifndef KOS_DEPDIR
+
+obj/%.o: %.c
+	kos-cc $(CFLAGS) -c $< -o $@
+
+obj/%.o: %.cc
+	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+
+obj/%.o: %.cpp
+	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+
+else
+
+obj/%.o: %.c
+	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+
+obj/%.o: %.cc
+	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+
+obj/%.o: %.cpp
+	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+
+-include $(wildcard $(KOS_DEPDIR)/*.md)
+
+endif
+
+obj/%.o: %.s
+	kos-as $< -o $@
+
+obj/%.o: %.S
+	kos-as $< -o $@
+
+subdirs: $(patsubst %, _dir_%, $(SUBDIRS))
+
+$(patsubst %, _dir_%, $(SUBDIRS)):
+	$(MAKE) -C $(patsubst _dir_%, %, $@)
+
+clean_subdirs: $(patsubst %, _clean_dir_%, $(SUBDIRS))
+
+$(patsubst %, _clean_dir_%, $(SUBDIRS)):
+	$(MAKE) -C $(patsubst _clean_dir_%, %, $@) clean
+
+# Define KOS_ROMDISK_DIR in your Makefile if you want these two handy rules.
+ifdef KOS_ROMDISK_DIR
+romdisk.img:
+	$(KOS_GENROMFS) -f romdisk.img -d $(KOS_ROMDISK_DIR) -v -x .svn
+
+romdisk.o: romdisk.img
+	$(KOS_BASE)/utils/bin2o/bin2o romdisk.img romdisk romdisk.o
+endif
 
 dc-pre-build:
 	@echo PREBUILD
-	cat sample7 main.cc > combined.cc
+	cat sample7 main.cc > combined-dc.cc
 
 dc-post-build: dc-main-build
 	@echo POSTBUILD
