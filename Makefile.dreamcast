@@ -1,0 +1,47 @@
+#
+# Libdream Examples
+# (c)2000-2001 Dan Potter
+#
+
+.PHONY: all clean
+
+all: dc-post-build
+
+BIN = complexis
+OBJS = combined.o
+TARGET = $(BIN).elf
+
+include $(KOS_BASE)/Makefile.rules
+
+dc-pre-build:
+	@echo PREBUILD
+	cat sample7 main.cc > combined.cc
+
+dc-post-build: dc-main-build
+	@echo POSTBUILD
+
+dc-main-build: dc-pre-build
+	@$(MAKE) -f Makefile.dreamcast --no-print-directory dc-main-target
+
+dc-main-target: $(TARGET)
+
+clean:
+	rm -f $(TARGET) $(OBJS) $(EXTRA_CLEAN)
+
+rm-elf:
+	rm -f $(TARGET)
+
+CFLAGS := -DPLATFORM_DC
+
+$(TARGET): $(OBJS)
+	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \
+		$(OBJS) $(DATAOBJS) $(OBJEXTRA) \
+		$(EXTRA_LIBS) $(KOS_LIBS)
+
+run: $(TARGET)
+	$(KOS_LOADER) $(TARGET)
+
+dist:
+	rm -f $(OBJS) $(EXTRA_CLEAN)
+	$(KOS_STRIP) $(TARGET)
+
