@@ -8229,7 +8229,7 @@ void renderBoard() {
   pvr_list_begin(PVR_LIST_OP_POLY);
   pvr_prim(&poly, sizeof(poly));
 
-  Bounds tempBounds(0, 0, 31, 31);
+  Bounds tempBounds(0, 31, 0, 31);
   drawSquare(tempBounds, 2, 0xff00ff00);
 
   pvr_list_finish();
