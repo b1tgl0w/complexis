@@ -7002,7 +7002,7 @@ char sample7[] =
 #ifdef PLATFORM_PC
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
-#endif
+#endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
 typedef unsigned int Uint32; //TODO For now
 #include <arch/timer.h>
@@ -7068,7 +7068,12 @@ const int blockwidth = 25;
 #ifdef PLATFORM_DC
 const int blockwidth = 7;
 #endif /* PLATFORM_DC */
+#ifdef PLATFORM_PC
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
+#endif
+#ifdef PLATFORM_DC
+Uint32 blue = 0xff579eff;
+#endif
 bool blueInCorridor = false;
 Coord boardCoord(0, 0);
 #ifdef PLATFORM_PC
@@ -7100,7 +7105,12 @@ const int gravityTimeout = 750;
 int gravityTimer = gravityTimeout;
 Uint32 gray1 = 0xffc5c5c5; // "hsl(280, 0%, 70%)";
 Uint32 gray2 = 0xffc6c6c5; // gray1 + 1 r.
+#ifdef PLATFORM_PC
 Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
+#endif
+#ifdef PLATFORM_DC
+Uint32 green = 0xff98ff57;
+#endif
 bool greenInCorridor = false;
 //let highlight: string = "hsl(250, 100%, 80%)";
 Uint32 keystate = 0;
@@ -7117,11 +7127,21 @@ int moveTimerLeft = moveTimeout;
 int moveTimerRight = moveTimeout;
 int noParam = 0;
 int noParam2 = 0;
+#ifdef PLATFORM_PC
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
+#endif
+#ifdef PLATFORM_DC
+Uint32 orange = 0xffff9157;
+#endif
 bool orangeInCorridor = false;
 int prevDirectionMain[5] = { -1, -1, -1, -1, -1 };
 int prevDirectionSecondary[5] = { -1, -1, -1, -1, -1 };
+#ifdef PLATFORM_PC
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
+#endif /* PLATFORM_PC */
+#ifdef PLATFORM_DC
+Uint32 red = 0xffff5757;
+#endif /* PLATFORM_DC */
 bool redInCorridor = false;
 #ifdef PLATFORM_PC
 SDL_Renderer *renderer;
@@ -7150,11 +7170,24 @@ Uint32 whole[wholeLength][whole0Length] = {
   { bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor},
   { bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor}
 };
+#ifdef PLATFORM_PC
 Uint32 violet1 = 0xffecc6e0; //"hsl(280, 45%, 70%)";
 Uint32 violet2 = 0xffecc6e1;
 Uint32 violet3 = 0xffedc6e0;
 Uint32 violet4 = 0xffedc6e1;
+#endif
+#ifdef PLATFORM_DC
+Uint32 violet1 = 0xff8457ff;
+Uint32 violet2 = 0xff8457fe;
+Uint32 violet3 = 0xff8457fd;
+Uint32 violet4 = 0xff8457fc;
+#endif
+#ifdef PLATFORM_PC
 Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
+#endif
+#ifdef PLATFORM_DC
+Uint32 yellow = 0xffffcb57;
+#endif
 bool yellowInCorridor = false;
 Uint32 blockcolors[9] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4 };
 
@@ -8451,10 +8484,10 @@ int main(int argc, char **argv) {
 #endif
 
 #ifdef PLATFORM_DC
-  //uint64 timer = timer_ms_gettime64(), start, end;
+  vid_init(DM_640x480, PM_RGB565);
   pvr_stats_t stats;
   pvr_init(&pvr_params);
-  pvr_set_bg_color(.5f, .8f, .3f);
+  pvr_set_bg_color(.78f, .78f, .78f);
   //start = timer_ms_gettime64();
   boardCoord.col = 640 / 2 - board0Length * blockwidth / 2;
   boardCoord.row = 480 / 2 - boardLength * blockwidth / 2;
