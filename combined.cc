@@ -8251,7 +8251,7 @@ void renderBoard() {
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
         Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x40000000; //TODO endian bug
         boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor);
-        drawSquare(shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor, 1);
+        // Don't draw shadow on dreamcast because we don't use translucency
       }
     }
   }
