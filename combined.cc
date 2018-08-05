@@ -7012,6 +7012,8 @@ typedef unsigned int Uint32; //TODO For now
 #include <ctime>
 #ifdef PLATFORM_DC
 #include <stdio.h>
+#include <dc/maple.h>
+#include <dc/maple/controller.h>
 #include <dc/pvr.h>
 #endif
 
@@ -7091,6 +7093,8 @@ const int clockDirections[clockDirectionsLength] = {
   12, 1, 3, 5, 6, 7, 9, 11
 };
 Uint32 colorme = 0x00000100;
+Uint32 controllerstate = 0;
+Uint32 controllerstateprev = 0;
 int corridorClockBlueCw = -1;
 int corridorClockBlueCcw = -1;
 int corridorClockGreenCw = -1;
@@ -7208,6 +7212,7 @@ int colorIndex(Uint32 color);
 void colorWhole();
 void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, bool &y, bool &g, bool &b);
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
+void controller();
 void corridorClocks(Uint32 potentialWhole[][whole0Length]);
 void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth);
@@ -7652,6 +7657,103 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
   } while(lf>0);
 
   return sf==7; // TODO hardcoded
+}
+
+void controller() {
+#ifdef PLATFORM_DC
+  maple_device_t *cont;
+  cont_state_t *state;
+  cont = maple_enum_type(0, MAPLE_FUNC_CONTROLLER);
+
+  if (cont) {
+    state = (cont_state_t *)maple_dev_status(cont);
+
+    if (!state)
+      return;
+
+    if (state->buttons & CONT_START)
+      exit(0);
+
+    if (state->buttons & CONT_A) {
+      controllerstate |= 0x1;
+      controllerstate &= ~static_cast<Uint32>(0x10);
+      controllerstate &= ~static_cast<Uint32>(0x40);
+      controllerstate &= ~static_cast<Uint32>(0x100);
+    }
+    if (state->buttons & CONT_X) {
+      controllerstate |= 0x10;
+      controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x40);
+      controllerstate &= ~static_cast<Uint32>(0x100);
+    }
+    if (state->buttons & CONT_Y) {
+      controllerstate |= 0x40;
+      controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x10);
+      controllerstate &= ~static_cast<Uint32>(0x100);
+    }
+    if (state->buttons & CONT_B) {
+      controllerstate |= 0x100;
+      controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x10);
+      controllerstate &= ~static_cast<Uint32>(0x40);
+    }
+    if (state->rtrig > 0x7f && state->ltrig <= 0x7f) {
+       //TODO extra wait here not necessary
+       if((controllerstate & 0x1) == 0x1)
+         keystate |= 0x1;
+       if((controllerstate & 0x10) == 0x10) 
+         keystate |= 0x10;
+       if((controllerstate & 0x40) == 0x40)
+         keystate |= 0x40;
+       if((controllerstate & 0x100) == 0x100)
+         keystate |= 0x100;
+    }
+    else {
+      keystate &= ~static_cast<Uint32>(0x1);
+      keystate &= ~static_cast<Uint32>(0x10);
+      keystate &= ~static_cast<Uint32>(0x40);
+      keystate &= ~static_cast<Uint32>(0x100);
+    }
+    if (state->ltrig > 0x7f && state->rtrig <= 0x7f) {
+       //TODO extra wait here not necessary
+       if((controllerstate & 0x1) == 0x1)
+         keystate |= 0x2;
+       if((controllerstate & 0x10) == 0x10)
+         keystate |= 0x20;
+       if((controllerstate & 0x40) == 0x40)
+         keystate |= 0x80;
+       if((controllerstate & 0x100) == 0x100)
+         keystate |= 0x200;
+    }
+    else {
+      keystate &= ~static_cast<Uint32>(0x2);
+      keystate &= ~static_cast<Uint32>(0x20);
+      keystate &= ~static_cast<Uint32>(0x80);
+      keystate &= ~static_cast<Uint32>(0x200);
+    }
+    if (state->buttons & CONT_DPAD_UP)
+      keystate |= 0x4000;
+    else
+      keystate &= ~static_cast<Uint32>(0x4000);
+    if(state->buttons & CONT_DPAD_DOWN)
+      keystate |= 0x8000;
+    else
+      keystate &= ~static_cast<Uint32>(0x8000);
+    if(state->buttons & CONT_DPAD_LEFT)
+      keystate |= 0x10000;
+    else
+      keystate &= ~static_cast<Uint32>(0x10000);
+    if(state->buttons & CONT_DPAD_RIGHT)
+      keystate |= 0x20000;
+    else
+      keystate &= ~static_cast<Uint32>(0x20000);
+    if(state->ltrig > 0x7f && state->rtrig > 0x7f)
+      keystate |= 0x40000;
+    else
+      keystate &= ~static_cast<Uint32>(0x40000);
+  }
+#endif /* PLATFORM_DC */
 }
 
 void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
@@ -8436,6 +8538,7 @@ Uint32 update(Uint32 interval, void *param) {
   }
   param = param; // To suppress warning;
   keystateprev = keystate;
+  controllerstateprev = controllerstate;
   return interval;
 }
 
@@ -8516,6 +8619,7 @@ int main(int argc, char **argv) {
       nowTime = nowSeconds * 1000 + nowMillis;
       elapsedTime = nowTime - lastTime;
       lastTime = nowTime;
+      controller();
       update(elapsedTime, &unusedi);
       renderBoard();
     }
