@@ -7061,12 +7061,23 @@ Coord &Coord::operator=(const Coord &rhs) {
 
 Uint32 bgcolor = 0xffa7a7a7; //"hsl(50, 7%, 97%)";
 int blockclocks [5] = { 6, 9, 3, 12, 12 };
+#ifdef PLATFORM_PC
 const int blockwidth = 25;
+#endif /* PLATFORM_PC */
+#ifdef PLATFORM_DC
+const int blockwidth = 7;
+#endif /* PLATFORM_DC */
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
 bool blueInCorridor = false;
 Coord boardCoord(0, 0);
+#ifdef PLATFORM_PC
 const int boardLength = 34;
 const int board0Length = 19;
+#endif /* PLATFORM_PC */
+#ifdef PLATFORM_DC
+const int boardLength = 34;
+const int board0Length = 19;
+#endif /* PLATFORM_DC */
 bool board[boardLength][board0Length]; //TODO
 const int buttonWidth = 25;
 const int clockDirectionsLength = 8;
@@ -8417,10 +8428,8 @@ int main(int argc, char **argv) {
   // TODO if (renderer == null)
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize(renderer, 1824, 984);
-#endif
   boardCoord.col = 1824 / 2 - board0Length * blockwidth / 2;
   boardCoord.row = 984 / 2 - boardLength * blockwidth / 2;
-#ifdef PLATFORM_PC
   if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
     bgcolor = SDL_Swap32(bgcolor);
     red = SDL_Swap32(red);
@@ -8446,6 +8455,8 @@ int main(int argc, char **argv) {
   pvr_init(&pvr_params);
   pvr_set_bg_color(.5f, .8f, .3f);
   //start = timer_ms_gettime64();
+  boardCoord.col = 640 / 2 - board0Length * blockwidth / 2;
+  boardCoord.row = 480 / 2 - boardLength * blockwidth / 2;
 #endif /* PLATFORM_DC */
 
 // TODO destroy window release renderer.
