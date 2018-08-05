@@ -7151,6 +7151,9 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element); // TODO which overload is 
 bool arrayHas(int a[], int size, int search); // TODO which overload is used?
 bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
 Bounds bounds(Uint32 target[][whole0Length]);
+#ifdef PLATFORM_DC
+void boxColor(...);
+#endif /* PLATFORM_DC */
 void capitalizeRows();
 void centerWhole(Uint32 target[][whole0Length], bool translate);
 void clockMove(Uint32 color, bool cwTrueCcwFalse);
@@ -7162,9 +7165,7 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 void corridorClocks(Uint32 potentialWhole[][whole0Length]);
 void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
-#ifdef PLATFORM_DC
-void drawSquare(const Bounds &b, int z, Uint32 color);
-#endif /* PLATFORM_DC */
+void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth);
 int getAdjOccupied(Coord coords, Coord adj[]);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
 int getClockDirection(const Coord &center, const Coord &d);
@@ -7268,6 +7269,11 @@ Bounds bounds(Uint32 target[][whole0Length]) {
   
   return Bounds(minx, maxx, miny, maxy);
 }
+
+#ifdef PLATFORM_DC
+void boxColor(...) {
+}
+#endif /* PLATFORM_DC */
 
 void capitalizeRows() {
   bool full = true;
@@ -7636,33 +7642,30 @@ void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) 
   }
 }
 
+void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth) {
 #ifdef PLATFORM_DC
-void drawSquare(const Bounds &b, int z, Uint32 color) {
   pvr_vertex_t vert;
   vert.flags = PVR_CMD_VERTEX;
-  vert.x = b.left;
-  vert.y = b.bottom;
-  vert.z = z;
+  vert.x = x1;
+  vert.y = y2;
+  vert.z = depth;
   vert.u = vert.v = 0.0f;
-  vert.argb = 0xff0000ff;
+  vert.argb = color;
   vert.oargb = 0;
   pvr_prim(&vert, sizeof(vert));
 
-  vert.y = b.top;
-  vert.argb = 0xff00ff00;
+  vert.y = y1;
   pvr_prim(&vert, sizeof(vert));
 
-  vert.x = b.right;
-  vert.y = b.bottom;
-  vert.argb = 0xff000000;
+  vert.x = x2;
+  vert.y = y2;
   pvr_prim(&vert, sizeof(vert));
 
   vert.flags = PVR_CMD_VERTEX_EOL;
-  vert.y = b.top;
-  vert.argb = 0xffff0000;
+  vert.y = y1;
   pvr_prim(&vert, sizeof(vert));
-}
 #endif /* PLATFORM_DC */
+}
 
 int getAdjOccupied(Coord coords, Coord adj[]) {
   int idx=0;
@@ -8168,7 +8171,23 @@ void renderBoard() {
 #ifdef PLATFORM_PC
   SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
   SDL_RenderClear(renderer);
+#endif /* PLATFORM_PC */
+#ifdef PLATFORM_DC
+  void *renderer = NULL; // Not used
+  pvr_poly_cxt_t cxt;
+  pvr_poly_hdr_t poly;
+
+  pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
+  pvr_poly_compile(&poly, &cxt);
+
+  pvr_wait_ready();
+
+  pvr_scene_begin();
+  pvr_list_begin(PVR_LIST_OP_POLY);
+  pvr_prim(&poly, sizeof(poly));
+#endif /* PLATFORM_DC */
   boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
+  drawSquare(boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor, 1);
   for(int i = 0; i < boardLength; ++i) {
     for(int j = 0; j < board0Length; ++j) {
       //ctx.fillStyle = board[i][j];
@@ -8182,10 +8201,12 @@ void renderBoard() {
         int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
         int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
         boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+        drawSquare(boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j], 1);
         int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
         Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x40000000; //TODO endian bug
         boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor);
+        drawSquare(shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor, 1);
       }
     }
   }
@@ -8202,6 +8223,7 @@ void renderBoard() {
           int boxX = boardCoord.col + j * blockwidth;
           int boxY = boardCoord.row + i * blockwidth;
           boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5]); //TODO hardcoded
+          drawSquare(boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5], 1); //TODO hardcoded
         }
       }
     }
@@ -8211,30 +8233,15 @@ void renderBoard() {
           int boxX = boardCoord.col + j * blockwidth;
           int boxY = boardCoord.row + i * blockwidth;
           boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
+          drawSquare(boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1, 1);
         }
       }
     }
   }
-#endif /* PLATFORM_PC */
+
 #ifdef PLATFORM_DC
-  pvr_poly_cxt_t cxt;
-  pvr_poly_hdr_t poly;
-
-  pvr_poly_cxt_col(&cxt, PVR_LIST_OP_POLY);
-  pvr_poly_compile(&poly, &cxt);
-
-  pvr_wait_ready();
-
-  pvr_scene_begin();
-  pvr_list_begin(PVR_LIST_OP_POLY);
-  pvr_prim(&poly, sizeof(poly));
-
-  Bounds tempBounds(0, 31, 0, 31);
-  drawSquare(tempBounds, 2, 0xff00ff00);
-
   pvr_list_finish();
   pvr_scene_finish();
-
 #endif /* PLATFORM_DC */
 }
 
