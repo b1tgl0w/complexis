@@ -737,6 +737,16 @@ void controller() {
       keystate &= ~static_cast<Uint32>(0x80);
       keystate &= ~static_cast<Uint32>(0x200);
     }
+    if(state->joyx < -0x7f) {
+      keystate |= 0x800;
+    }
+    else
+      keystate &= ~static_cast<Uint32>(0x800);
+    if(state->joyx >= 0x7f) {
+      keystate |= 0x400;
+    }
+    else
+      keystate &= ~static_cast<Uint32>(0x400);
     if (state->buttons & CONT_DPAD_UP)
       keystate |= 0x4000;
     else
