@@ -4,6 +4,7 @@
 #endif
 #ifdef PLATFORM_DC
 typedef unsigned int Uint32; //TODO For now
+#include <arch/timer.h>
 #endif
 
 #include <cstdlib>
@@ -1470,8 +1471,20 @@ int main(int argc, char **argv) {
     keyboard();
 #endif
 #ifdef PLATFORM_DC
-    while(true)
+    int unusedi = 0;
+    uint32 nowSeconds = 0;
+    uint32 nowMillis = 0;
+    uint32 nowTime = 0;
+    uint32 lastTime = 0;
+    uint32 elapsedTime = 0; // TODO 64bit timer important 
+    while(true) {
+      timer_ms_gettime(&nowSeconds, &nowMillis);
+      nowTime = nowSeconds * 1000 + nowMillis;
+      elapsedTime = nowTime - lastTime;
+      lastTime = nowTime;
+      update(elapsedTime, &unusedi);
       renderBoard();
+    }
     pvr_get_stats(&stats);
     printf("From pvr_get_stats:\n\tVBlank Count: %lu\n\tFrame Count: %lu\n",
            stats.vbl_count, stats.frame_count);
