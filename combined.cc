@@ -7179,12 +7179,14 @@ Uint32 violet1 = 0xffecc6e0; //"hsl(280, 45%, 70%)";
 Uint32 violet2 = 0xffecc6e1;
 Uint32 violet3 = 0xffedc6e0;
 Uint32 violet4 = 0xffedc6e1;
+Uint32 violet5 = 0xffedc6e2;
 #endif
 #ifdef PLATFORM_DC
 Uint32 violet1 = 0xff8457ff;
 Uint32 violet2 = 0xff8457fe;
 Uint32 violet3 = 0xff8457fd;
 Uint32 violet4 = 0xff8457fc;
+Uint32 violet5 = 0xff8457fb;
 #endif
 #ifdef PLATFORM_PC
 Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
@@ -7193,7 +7195,7 @@ Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
 Uint32 yellow = 0xffffcb57;
 #endif
 bool yellowInCorridor = false;
-Uint32 blockcolors[9] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4 };
+Uint32 blockcolors[10] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4, violet5 };
 
 void applyWhole();
 bool arrayHas(Uint32 ar[], int size, Uint32 element); // TODO which overload is used?
@@ -7607,6 +7609,10 @@ void colorWhole() {
       if (whole[i][j] == colorme) {
         whole[i][j] = blockcolors[colorindex++];
       }
+#ifdef PLATFORM_DC
+      if (whole[i][j] == orange)
+        whole[i][j] = violet5;
+#endif
     }
   }
 }
@@ -8344,7 +8350,7 @@ void renderBoard() {
   Coord shadowcoord = shadow(whole, wholecoord);
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
-      if(arrayHas(blockcolors, 9, whole[i][j])){ //TODO hardcoded
+      if(arrayHas(blockcolors, 10, whole[i][j])){ //TODO hardcoded
         int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
         int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
         boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
