@@ -590,7 +590,12 @@ int colorIndex(Uint32 color) {
 
 void colorWhole() {
   int colorindex = 0;
+#ifdef PLATFORM_PC
   int numViolet = rand() % 3 + 2;
+#endif
+#ifdef PLATFORM_DC
+  int numViolet = rand() % 2 + 2;
+#endif
   Coord r1 = randomColorMe(whole);
   Coord r2 = randomColorMe(whole);
   whole[r1.row][r1.col] = violet1;
@@ -661,7 +666,12 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
       l[lf++]=m+1;
   } while(lf>0);
 
+#ifdef PLATFORM_PC
   return sf==7; // TODO hardcoded
+#endif
+#ifdef PLATFORM_DC
+  return sf==6; // TODO hardcoded
+#endif
 }
 
 void controller() {
@@ -1113,12 +1123,22 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
       newWholeX[i][j] = bgcolor;
     }
   }
+#ifdef PLATFORM_PC
   for (int i = 0; i < 7; ++i) { //TODO hardcoded
     for(int j = 0; j < 7; ++j) {
       if (sample7[r * 49 + (i * 7 + j)] == '1')
         newWholeX[i][j] = colorme;
     }
   }
+#endif
+#ifdef PLATFORM_DC
+  for (int i = 0; i < 6; ++i) { //TODO hardcoded
+    for(int j = 0; j < 6; ++j) {
+      if (sample6[r * 36 + (i * 6 + j)] == '1')
+        newWholeX[i][j] = colorme;
+    }
+  }
+#endif
   for (int i = 0; i < 5; ++i) {
     prevDirectionMain[i] = -1;
     prevDirectionSecondary[i] = -1;
