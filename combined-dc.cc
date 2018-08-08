@@ -6817,67 +6817,26 @@ void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) 
 
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth) {
 #ifdef PLATFORM_DC
-  pvr_vertex_t vert1;
-  vert1.flags = PVR_CMD_VERTEX;
-  vert1.x = x1;
-  vert1.y = y2;
-  vert1.z = depth;
-  vert1.u = vert1.v = 0.0f;
-  vert1.argb = color;
-  vert1.oargb = 0;
-  pvr_prim(&vert1, sizeof(vert1));
+  pvr_vertex_t vert;
+  vert.flags = PVR_CMD_VERTEX;
+  vert.x = x1;
+  vert.y = y2;
+  vert.z = depth;
+  vert.u = vert.v = 0.0f;
+  vert.argb = color;
+  vert.oargb = 0;
+  pvr_prim(&vert, sizeof(vert));
 
-  pvr_vertex_t vert2;
-  vert2.flags = PVR_CMD_VERTEX;
-  vert2.x = x1;
-  vert2.y = y1;
-  vert2.z = depth;
-  vert2.u = vert2.v = 0.0f;
-  vert2.argb = color;
-  vert2.oargb = 0;
-  pvr_prim(&vert2, sizeof(vert2));
-  pvr_prim(&vert2, sizeof(vert2));
+  vert.y = y1;
+  pvr_prim(&vert, sizeof(vert));
 
-  pvr_vertex_t vert3;
-  vert3.flags = PVR_CMD_VERTEX_EOL;
-  vert3.x = x2;
-  vert3.y = y2;
-  vert3.z = depth;
-  vert3.u = vert3.v = 0.0f;
-  vert3.argb = color;
-  vert3.oargb = 0;
-  pvr_prim(&vert3, sizeof(vert3));
+  vert.x = x2;
+  vert.y = y2;
+  pvr_prim(&vert, sizeof(vert));
 
-  pvr_vertex_t vert4;
-  vert4.flags = PVR_CMD_VERTEX;
-  vert4.x = x2;
-  vert4.y = y2;
-  vert4.z = depth;
-  vert4.u = vert4.v = 0.0f;
-  vert4.argb = color;
-  vert4.oargb = 0;
-  pvr_prim(&vert4, sizeof(vert4));
-  pvr_prim(&vert4, sizeof(vert4));
-
-  pvr_vertex_t vert5;
-  vert5.flags = PVR_CMD_VERTEX;
-  vert5.x = x1;
-  vert5.y = y1;
-  vert5.z = depth;
-  vert5.u = vert5.v = 0.0f;
-  vert5.argb = color;
-  vert5.oargb = 0;
-  pvr_prim(&vert5, sizeof(vert5));
-
-  pvr_vertex_t vert6;
-  vert6.flags = PVR_CMD_VERTEX_EOL;
-  vert6.x = x2;
-  vert6.y = y1;
-  vert6.z = depth;
-  vert6.u = vert6.v = 0.0f;
-  vert6.argb = color;
-  vert6.oargb = 0;
-  pvr_prim(&vert6, sizeof(vert6));
+  vert.flags = PVR_CMD_VERTEX_EOL;
+  vert.y = y1;
+  pvr_prim(&vert, sizeof(vert));
 #endif /* PLATFORM_DC */
 }
 
