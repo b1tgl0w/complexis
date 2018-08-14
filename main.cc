@@ -67,7 +67,7 @@ int blockclocks [5] = { 6, 9, 3, 12, 12 };
 const int blockwidth = 25;
 #endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
-const int blockwidth = 12;
+const int blockwidth = 13;
 #endif /* PLATFORM_DC */
 #ifdef PLATFORM_PC
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";

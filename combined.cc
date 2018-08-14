@@ -7068,7 +7068,7 @@ int blockclocks [5] = { 6, 9, 3, 12, 12 };
 const int blockwidth = 25;
 #endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
-const int blockwidth = 12;
+const int blockwidth = 13;
 #endif /* PLATFORM_DC */
 #ifdef PLATFORM_PC
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
@@ -8384,7 +8384,7 @@ void renderBoard() {
         int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
         int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
         boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
-        drawSquare(boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j], 2);
+        drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j], 2);
         int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
         Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x40000000; //TODO endian bug
@@ -8416,7 +8416,7 @@ void renderBoard() {
           int boxX = boardCoord.col + j * blockwidth;
           int boxY = boardCoord.row + i * blockwidth;
           boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
-          drawSquare(boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1, 2);
+          drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1, 2);
         }
       }
     }
