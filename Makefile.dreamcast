@@ -67,7 +67,7 @@ endif
 
 dc-pre-build:
 	@echo PREBUILD
-	cat sample6 main.cc > combined-dc.cc
+	cat sample7 main.cc > combined-dc.cc
 
 dc-post-build: dc-main-build
 	@echo POSTBUILD

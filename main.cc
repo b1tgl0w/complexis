@@ -82,7 +82,7 @@ const int boardLength = 34;
 const int board0Length = 19;
 #endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
-const int boardLength = 34;
+const int boardLength = 33;
 const int board0Length = 19;
 #endif /* PLATFORM_DC */
 bool board[boardLength][board0Length]; //TODO
@@ -130,6 +130,7 @@ int moveTimerLeft = moveTimeout;
 int moveTimerRight = moveTimeout;
 int noParam = 0;
 int noParam2 = 0;
+bool orangeComboButtonDown = false;
 #ifdef PLATFORM_PC
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
 #endif
@@ -590,12 +591,7 @@ int colorIndex(Uint32 color) {
 
 void colorWhole() {
   int colorindex = 0;
-#ifdef PLATFORM_PC
   int numViolet = rand() % 3 + 2;
-#endif
-#ifdef PLATFORM_DC
-  int numViolet = rand() % 2 + 2;
-#endif
   Coord r1 = randomColorMe(whole);
   Coord r2 = randomColorMe(whole);
   whole[r1.row][r1.col] = violet1;
@@ -613,10 +609,6 @@ void colorWhole() {
       if (whole[i][j] == colorme) {
         whole[i][j] = blockcolors[colorindex++];
       }
-#ifdef PLATFORM_DC
-      if (whole[i][j] == orange)
-        whole[i][j] = violet5;
-#endif
     }
   }
 }
@@ -666,12 +658,7 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
       l[lf++]=m+1;
   } while(lf>0);
 
-#ifdef PLATFORM_PC
   return sf==7; // TODO hardcoded
-#endif
-#ifdef PLATFORM_DC
-  return sf==6; // TODO hardcoded
-#endif
 }
 
 void controller() {
@@ -686,16 +673,22 @@ void controller() {
     if (!state)
       return;
 
-    if (state->buttons & CONT_START)
-      exit(0);
-
-    if (state->buttons & CONT_A) {
+    if (state->buttons & CONT_A && state->buttons & CONT_X) {
+      controllerstate |= 0x11;
+      controllerstate &= ~static_cast<Uint32>(0x40);
+      controllerstate &= ~static_cast<Uint32>(0x100);
+      orangeComboButtonDown = true;
+    }
+    else if (!(state->buttons & CONT_A) && (state->buttons & CONT_X)) {
+      orangeComboButtonDown = false;
+    }
+    if (state->buttons & CONT_A && orangeComboButtonDown == false) {
       controllerstate |= 0x1;
       controllerstate &= ~static_cast<Uint32>(0x10);
       controllerstate &= ~static_cast<Uint32>(0x40);
       controllerstate &= ~static_cast<Uint32>(0x100);
     }
-    if (state->buttons & CONT_X) {
+    if (state->buttons & CONT_X && orangeComboButtonDown == false) {
       controllerstate |= 0x10;
       controllerstate &= ~static_cast<Uint32>(0x1);
       controllerstate &= ~static_cast<Uint32>(0x40);
@@ -1123,22 +1116,12 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
       newWholeX[i][j] = bgcolor;
     }
   }
-#ifdef PLATFORM_PC
   for (int i = 0; i < 7; ++i) { //TODO hardcoded
     for(int j = 0; j < 7; ++j) {
       if (sample7[r * 49 + (i * 7 + j)] == '1')
         newWholeX[i][j] = colorme;
     }
   }
-#endif
-#ifdef PLATFORM_DC
-  for (int i = 0; i < 6; ++i) { //TODO hardcoded
-    for(int j = 0; j < 6; ++j) {
-      if (sample6[r * 36 + (i * 6 + j)] == '1')
-        newWholeX[i][j] = colorme;
-    }
-  }
-#endif
   for (int i = 0; i < 5; ++i) {
     prevDirectionMain[i] = -1;
     prevDirectionSecondary[i] = -1;
