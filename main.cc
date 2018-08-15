@@ -674,16 +674,19 @@ void controller() {
       return;
 
     if (state->buttons & CONT_A && state->buttons & CONT_X) {
-      controllerstate |= 0x11;
+      controllerstate |= 0x4;
+      controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x10);
       controllerstate &= ~static_cast<Uint32>(0x40);
       controllerstate &= ~static_cast<Uint32>(0x100);
       orangeComboButtonDown = true;
     }
-    else if (!(state->buttons & CONT_A) && (state->buttons & CONT_X)) {
+    else if (!(state->buttons & CONT_A) && !(state->buttons & CONT_X)) {
       orangeComboButtonDown = false;
     }
     if (state->buttons & CONT_A && orangeComboButtonDown == false) {
       controllerstate |= 0x1;
+      controllerstate &= ~static_cast<Uint32>(0x04);
       controllerstate &= ~static_cast<Uint32>(0x10);
       controllerstate &= ~static_cast<Uint32>(0x40);
       controllerstate &= ~static_cast<Uint32>(0x100);
@@ -691,18 +694,21 @@ void controller() {
     if (state->buttons & CONT_X && orangeComboButtonDown == false) {
       controllerstate |= 0x10;
       controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x4);
       controllerstate &= ~static_cast<Uint32>(0x40);
       controllerstate &= ~static_cast<Uint32>(0x100);
     }
     if (state->buttons & CONT_Y) {
       controllerstate |= 0x40;
       controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x4);
       controllerstate &= ~static_cast<Uint32>(0x10);
       controllerstate &= ~static_cast<Uint32>(0x100);
     }
     if (state->buttons & CONT_B) {
       controllerstate |= 0x100;
       controllerstate &= ~static_cast<Uint32>(0x1);
+      controllerstate &= ~static_cast<Uint32>(0x4);
       controllerstate &= ~static_cast<Uint32>(0x10);
       controllerstate &= ~static_cast<Uint32>(0x40);
     }
@@ -710,6 +716,8 @@ void controller() {
        //TODO extra wait here not necessary
        if((controllerstate & 0x1) == 0x1)
          keystate |= 0x1;
+       if((controllerstate & 0x4) == 0x4) 
+         keystate |= 0x4;
        if((controllerstate & 0x10) == 0x10) 
          keystate |= 0x10;
        if((controllerstate & 0x40) == 0x40)
@@ -719,6 +727,7 @@ void controller() {
     }
     else {
       keystate &= ~static_cast<Uint32>(0x1);
+      keystate &= ~static_cast<Uint32>(0x4);
       keystate &= ~static_cast<Uint32>(0x10);
       keystate &= ~static_cast<Uint32>(0x40);
       keystate &= ~static_cast<Uint32>(0x100);
@@ -727,6 +736,8 @@ void controller() {
        //TODO extra wait here not necessary
        if((controllerstate & 0x1) == 0x1)
          keystate |= 0x2;
+       if((controllerstate & 0x4) == 0x4)
+         keystate |= 0x8;
        if((controllerstate & 0x10) == 0x10)
          keystate |= 0x20;
        if((controllerstate & 0x40) == 0x40)
@@ -736,6 +747,7 @@ void controller() {
     }
     else {
       keystate &= ~static_cast<Uint32>(0x2);
+      keystate &= ~static_cast<Uint32>(0x8);
       keystate &= ~static_cast<Uint32>(0x20);
       keystate &= ~static_cast<Uint32>(0x80);
       keystate &= ~static_cast<Uint32>(0x200);
