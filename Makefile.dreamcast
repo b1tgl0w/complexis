@@ -3,9 +3,17 @@
 # (c)2000-2001 Dan Potter
 #
 
+
+ifeq ($(MAKELEVEL),0)
+export EXTRA_CC_FLAGS = -DPLATFORM_DC --std=c++98 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wmaybe-uninitialized -Wuninitialized
+endif
+
 .PHONY: all clean
 
 all: dc-post-build
+
+debug-mode: EXTRA_CC_FLAGS += -DDEBUG_MODE
+debug-mode: all
 
 BIN = obj/complexis-dc
 OBJS = obj/combined-dc.o
@@ -17,24 +25,24 @@ TARGET = $(BIN).elf
 ifndef KOS_DEPDIR
 
 obj/%.o: %.c
-	kos-cc $(CFLAGS) -c $< -o $@
+	kos-cc $(CFLAGS) $(EXTRA_CC_FLAGS) -c $< -o $@
 
 obj/%.o: %.cc
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(EXTRA_CC_FLAGS) -c $< -o $@
 
 obj/%.o: %.cpp
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(EXTRA_CC_FLAGS) -c $< -o $@
 
 else
 
 obj/%.o: %.c
-	kos-cc $(CFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-cc $(CFLAGS) $(EXTRA_CC_FLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 obj/%.o: %.cc
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(EXTRA_CC_FLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 obj/%.o: %.cpp
-	kos-c++ $(CFLAGS) $(CXXFLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
+	kos-c++ $(CFLAGS) $(CXXFLAGS) $(EXTRA_CC_FLAGS) -c $< -o $@ -MD -MF $(KOS_DEPDIR)/$(patsubst %.c,%.md,$(subst /,__,$(subst ..,,$<)))
 
 -include $(wildcard $(KOS_DEPDIR)/*.md)
 
@@ -82,8 +90,6 @@ clean:
 
 rm-elf:
 	rm -f $(TARGET)
-
-CFLAGS := -DPLATFORM_DC
 
 $(TARGET): $(OBJS)
 	$(KOS_CC) $(KOS_CFLAGS) $(KOS_LDFLAGS) -o $(TARGET) $(KOS_START) \

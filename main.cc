@@ -1302,6 +1302,7 @@ void proc(Uint32 interval) {
   }
   else {
     gravityTimer -= static_cast<int>(interval & 0x7fffffff);
+#ifndef DEBUG_MODE
     if (gravityTimer < 0) {
       gravityTimer += gravityTimeout;
       ++wholecoord.row;
@@ -1319,6 +1320,7 @@ void proc(Uint32 interval) {
         }
       }
     }
+#endif /* DEBUG_MODE */
   }
   if (apply == true)
     applyWhole();
