@@ -7063,7 +7063,6 @@ Coord &Coord::operator=(const Coord &rhs) {
 }
 
 Uint32 bgcolor = 0xffa7a7a7; //"hsl(50, 7%, 97%)";
-int blockclocks [5] = { 6, 9, 3, 12, 12 };
 #ifdef PLATFORM_PC
 const int blockwidth = 25;
 #endif /* PLATFORM_PC */
@@ -7139,8 +7138,6 @@ Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
 Uint32 orange = 0xffff9157;
 #endif
 bool orangeInCorridor = false;
-int prevDirectionMain[5] = { -1, -1, -1, -1, -1 };
-int prevDirectionSecondary[5] = { -1, -1, -1, -1, -1 };
 #ifdef PLATFORM_PC
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
 #endif /* PLATFORM_PC */
@@ -7227,8 +7224,6 @@ Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length
 Coord getPotentialCoords(const Coord & coords, int clockDirection);
 bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length]);
 bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]);
-bool inMoreSimilarDirectionAsPrev(int clockDirection, int newCoordsDirection, int prevDirectionMain,
-  int prevDirectionSecondary);
 bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
 void keyboard();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
@@ -7541,13 +7536,6 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
       corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
     }
-  }
-
-// TODO jminer the following if statement might be old
-  if (newCoordsDirection > -1) {
-    if (prevDirectionMain[colorIndex(color)] > -1)
-      prevDirectionSecondary[colorIndex(color)] = prevDirectionMain[colorIndex(color)];
-    prevDirectionMain[colorIndex(color)] = newCoordsDirection;
   }
 }
 
@@ -7966,28 +7954,6 @@ bool inCorridor(const Coord &coords, Uint32 wholeEx[][whole0Length]) {
   return false;
 }
 
-// TODO jminer get rid of this function
-bool inMoreSimilarDirectionAsPrev(int defendingChampionDirection, int contenderDirection, int prevDirectionMainEx,
-  int prevDirectionSecondaryEx) {
-  if (prevDirectionMainEx < 0)
-    return true;
-  if (contenderDirection == prevDirectionMainEx
-    || contenderDirection == clockwise(true, prevDirectionMainEx)
-    || contenderDirection == clockwise(false, prevDirectionMainEx))
-    return true;
-  if (defendingChampionDirection == prevDirectionMainEx
-    || defendingChampionDirection == clockwise(true, prevDirectionMainEx)
-    || defendingChampionDirection == clockwise(false, prevDirectionMainEx))
-    return false;
-  if (prevDirectionSecondaryEx < 0)
-    return true;
-  if (contenderDirection == prevDirectionSecondaryEx
-    || contenderDirection == clockwise(true, prevDirectionSecondaryEx)
-    || contenderDirection == clockwise(false, prevDirectionSecondaryEx))
-    return true;
-  return false;
-}
-
 bool isOpen(const Coord & piececoords, Uint32 potentialWhole[][whole0Length], const Coord & wholeCoords) {
   if (piececoords.col < 0 || piececoords.row < 0)
     return false;
@@ -8134,10 +8100,6 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
       if (sample7[r * 49 + (i * 7 + j)] == '1')
         newWholeX[i][j] = colorme;
     }
-  }
-  for (int i = 0; i < 5; ++i) {
-    prevDirectionMain[i] = -1;
-    prevDirectionSecondary[i] = -1;
   }
 
   centerWhole(newWholeX, true);

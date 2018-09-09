@@ -1,0 +1,12 @@
+Assuming you have the correct IP.BIN
+ 1535  dd if=/dev/zero of=audio.raw bs=2352 count=300
+ 1536  wodim dev=/dev/sr0 speed=8 -multi -audio -tao audio.raw 
+ 1538  sh-elf-objcopy -O binary complexis-dc.elf complexis-dc.bin
+ 1539  scramble complexis-dc.bin 1ST_READ.BIN
+ 1540  vim IP.BIN 
+ 1541  wodim -msinfo
+ 1542  genisoimage -C 0,11702 -o tmp.iso 1ST_READ.BIN 
+ 1543  ( cat IP.BIN ; dd if=tmp.iso bs=2048 skip=16 ) > data.raw
+ 1544  wodim dev=/dev/sr0 speed=8 -xa -tao -multi data.raw 
+
+sr0 or sr1 if you have two drives
