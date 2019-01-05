@@ -7415,6 +7415,7 @@ void centerWhole(Uint32 target[][whole0Length], bool translate) {
 }
 
 void clockMove(Uint32 color, bool cwTrueCcwFalse) {
+  Uint32 state = 0;
   Coord curCoords = getCoords(color);
   Coord newCoords(curCoords.row, curCoords.col);
   int newCoordsDirection = -1;
@@ -7422,121 +7423,176 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   corridorClocks(whole); // This stays up top... called once
 
   Coord adjCoords[4];
-  int adjCoordsSize = getAdjOccupied(curCoords, adjCoords);
+  Coord step1, potentialCoords, potentialCoordsDiag;
+  Uint32 potentialWhole[wholeLength][whole0Length], potentialWholeDiag[wholeLength][whole0Length];
+  Uint32 step1Whole[wholeLength][whole0Length];
+  int numAdj = getAdjOccupied(curCoords, adjCoords);
+  int adjCountRemaining = numAdj;
+  int i = numAdj - adjCountRemaining;
+  int clockDirection, clockDirectionDiag;
+  bool invalidMove = false;
 
-  if (adjCoordsSize < 4) {
-    for (int i = 0; i < adjCoordsSize; ++i) {
-      int clockDirection = getClockDirection(adjCoords[i], curCoords);
+  while (true) {
+    // Transitions
+    if (state == 0) {
+      state = 1;
+    }
+    else if (state == 1) {
+      if (adjCountRemaining > 3)
+        state = 2;
+      else
+        state = 3;
+    }
+    else if (state == 2) {
+      break;
+    }
+    else if (state == 3) {
+      state = 4;
+    }
+    else if (state == 4) {
+      if (adjCountRemaining < 0)
+        state = 5;
+      else if (invalidMove)
+        state = 3;
+      else if (isOpen(step1, whole, wholecoord) 
+        && isOpen(potentialCoords, whole, wholecoord)
+        && contiguous(potentialCoords, potentialWhole) == true)
+        state = 6;
+      else if (isOpen(potentialCoords, whole, wholecoord) == false 
+        || contiguous(potentialCoords, potentialWhole) == false)
+        state = 7;
+      else
+        state = 3;
+    }
+    else if (state == 5) {
+      break;
+    }
+    else if (state == 6) {
+      state = 3;
+    }
+    else if (state == 7) {
+      state = 8;
+    }
+    else if (state == 8) {
+      if (invalidMove)
+        state = 3;
+      else if(isOpen(potentialCoordsDiag, whole, wholecoord) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true)
+        state = 9;
+      else
+        state = 3;
+    }
+    else if (state == 9) {
+      state = 3;
+    }
+
+    // Actions
+    if (state == 0) {
+    }
+    else if (state == 1) {
+    }
+    else if (state == 2) {
+    }
+    else if (state == 3) {
+      invalidMove = false;
+      i = numAdj - adjCountRemaining;
+      --adjCountRemaining;
+      clockDirection = getClockDirection(adjCoords[i], curCoords);
       if (clockDirection == -1)
-        continue;
+        invalidMove = true;
       int cw = clockwise(cwTrueCcwFalse, clockDirection);
       int cw2 = clockwise(cwTrueCcwFalse, cw);
       if (cw == -1 || cw2 == -1)
-        continue;
-      Coord step1 = getPotentialCoords(adjCoords[i], cw);
+        invalidMove = true;
+      step1 = getPotentialCoords(adjCoords[i], cw);
       if (step1.row == -1 || step1.col == -1)
-        continue; // TODO is this right?
-      Uint32 step1Whole[wholeLength][whole0Length];
+        invalidMove = true;
       cloneWhole(whole, step1Whole); //TODO array copy
       step1Whole[curCoords.row][curCoords.col] = bgcolor;
-      Coord potentialCoords = getPotentialCoords(adjCoords[i], cw2);
+      potentialCoords = getPotentialCoords(adjCoords[i], cw2);
       if (potentialCoords.row == -1 || potentialCoords.col == -1)
-        continue; // TODO is this right?
-      Uint32 potentialWhole[wholeLength][whole0Length];
+        invalidMove = true;
       cloneWhole(whole, potentialWhole); //TODO array copy
       potentialWhole[curCoords.row][curCoords.col] = bgcolor;
       potentialWhole[potentialCoords.row][potentialCoords.col] = color;
-      // TODO step1Whole should be contiguous except for the piece in motion.
-      if (isOpen(step1, whole, wholecoord) && isOpen(potentialCoords, whole, wholecoord) && contiguous(potentialCoords, potentialWhole) == true) {
-        if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
-          if(inCorridor(curCoords, whole)) {
-            if (betterCorridorExit(cwTrueCcwFalse, newCoordsDirection, clockDirection, color)) {
-              newCoords = potentialCoords; // TODO copy ctor?
-              newCoordsDirection = clockDirection;
-            }
-// Procedure:
-// For each color:
-// 1. If in corridor and no direction is set (such as a piece being in the corridor from initialization),
-//    set its direction to 1. (For now, but see if there's something more logical later.)
-// 2. Keep track of the direction you enter the corridor.
-// 3. Exit the same direction you enter the corridor
-// 4. If you reach a dead end (3 adjacent), then that's exiting the corridor.
-// 4b.In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
-// 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
-// 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
-// 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
-          }
-        }
-        else {
-          newCoords = potentialCoords; // TODO copy ctor?
-          newCoordsDirection = clockDirection;
-        }
-      }
-      else if (isOpen(potentialCoords, whole, wholecoord) == false || contiguous(potentialCoords, potentialWhole) == false) {
-        int clockDirectionDiag = getClockDirection(potentialCoords, curCoords);
-        if (clockDirectionDiag == -1)
-          continue;
-        int cwDiag = clockwise(cwTrueCcwFalse, clockDirectionDiag);
-        if (cwDiag == -1)
-          continue;
-        Coord potentialCoordsDiag = getPotentialCoords(potentialCoords, cwDiag);
-        if (potentialCoordsDiag.row == -1 || potentialCoordsDiag.col == -1)
-          continue;
-        Uint32 potentialWholeDiag[wholeLength][whole0Length];
-        cloneWhole(whole, potentialWholeDiag); //TODO array copy
-        potentialWholeDiag[curCoords.row][curCoords.col] = bgcolor;
-        potentialWholeDiag[potentialCoordsDiag.row][potentialCoordsDiag.col] = color;
-        if (isOpen(potentialCoordsDiag, whole, wholecoord) && contiguous(potentialCoordsDiag, potentialWholeDiag) == true) {
-          if(newCoords.row != curCoords.row && newCoords.col != curCoords.col) {
-            if(inCorridor(curCoords, whole)) {
-              if (betterCorridorExit(cwTrueCcwFalse, newCoordsDirection, clockDirectionDiag, color)) {
-                newCoords = potentialCoordsDiag; // TODO copy ctor?
-                newCoordsDirection = clockDirectionDiag;
-              }
-            }
-          }
-          else {
-            newCoords = potentialCoordsDiag; // TODO copy ctor?
-            newCoordsDirection = clockDirectionDiag;
-          }
-        }
-      }
+    }
+    else if (state == 4) {
+    }
+    else if (state == 5) {
+    }
+    else if (state == 6) {
+      newCoords = potentialCoords; // TODO copy ctor?
+      newCoordsDirection = clockDirection;
+    }
+    else if (state == 7) {
+      invalidMove = false;
+      clockDirectionDiag = getClockDirection(potentialCoords, curCoords);
+      if (clockDirectionDiag == -1)
+        invalidMove = true;
+      int cwDiag = clockwise(cwTrueCcwFalse, clockDirectionDiag);
+      if (cwDiag == -1)
+        invalidMove = true;
+      potentialCoordsDiag = getPotentialCoords(potentialCoords, cwDiag);
+      if (potentialCoordsDiag.row == -1 || potentialCoordsDiag.col == -1)
+        invalidMove = true;
+      cloneWhole(whole, potentialWholeDiag); //TODO array copy
+      potentialWholeDiag[curCoords.row][curCoords.col] = bgcolor;
+      potentialWholeDiag[potentialCoordsDiag.row][potentialCoordsDiag.col] = color;
+    }
+    else if (state == 8) {
+    }
+    else if (state == 9) {
+      newCoords = potentialCoordsDiag; // TODO copy ctor?
+      newCoordsDirection = clockDirectionDiag;
     }
   }
 
   whole[curCoords.row][curCoords.col] = bgcolor;
   whole[newCoords.row][newCoords.col] = color;
 
-  if (color == red) {
-    if (!redInCorridor && inCorridor(red, whole)) {
-      corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockRedCcw = oppositeClock(corridorClockRedCw);
+/****************************
+  // Cooridor Procedure:
+  // For each color:
+  // 1. If in corridor and no direction is set (such as a piece being in the corridor from initialization),
+  //    set its direction to 1. (For now, but see if there's something more logical later.)
+  // 2. Keep track of the direction you enter the corridor.
+  // 3. Exit the same direction you enter the corridor
+  // 4. If you reach a dead end (3 adjacent), then that's exiting the corridor.
+  // 4b.In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
+  // 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
+  // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
+  // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
+
+    if (color == red) {
+      if (!redInCorridor && inCorridor(red, whole)) {
+        corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+        corridorClockRedCcw = oppositeClock(corridorClockRedCw);
+      }
     }
-  }
-  if (color == orange) {
-    if (!orangeInCorridor && inCorridor(orange, whole)) {
-      corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
+    if (color == orange) {
+      if (!orangeInCorridor && inCorridor(orange, whole)) {
+        corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+        corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
+      }
     }
-  }
-  if (color == yellow) {
-    if (!yellowInCorridor && inCorridor(yellow, whole)) {
-      corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
+    if (color == yellow) {
+      if (!yellowInCorridor && inCorridor(yellow, whole)) {
+        corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+        corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
+      }
     }
-  }
-  if (color == green) {
-    if (!greenInCorridor && inCorridor(green, whole)) {
-      corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
+    if (color == green) {
+      if (!greenInCorridor && inCorridor(green, whole)) {
+        corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+        corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
+      }
     }
-  }
-  if (color == blue) {
-    if (!blueInCorridor && inCorridor(blue, whole)) {
-      corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
+    if (color == blue) {
+      if (!blueInCorridor && inCorridor(blue, whole)) {
+        corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+        corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
+      }
     }
-  }
+****************************/
 }
 
 int clockwise(bool cw, int clockDirection) {
