@@ -7195,10 +7195,11 @@ Uint32 yellow = 0xffffcb57;
 bool yellowInCorridor = false;
 Uint32 blockcolors[10] = { red, orange, yellow, green, blue, violet1, violet2, violet3, violet4, violet5 };
 
+int absoluteValue(int a);
 void applyWhole();
 bool arrayHas(Uint32 ar[], int size, Uint32 element); // TODO which overload is used?
 bool arrayHas(int a[], int size, int search); // TODO which overload is used?
-bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
+int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
 Bounds bounds(Uint32 target[][whole0Length]);
 #ifdef PLATFORM_DC
 void boxColor(...);
@@ -7227,6 +7228,7 @@ bool inCorridor(Uint32 color, Uint32 whole[][whole0Length]);
 bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
 void keyboard();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
+int minimum(int a, int b, int c);
 void newBoard();
 void newWhole(Uint32 newWholeX[][whole0Length]);
 int oppositeClock(int clockDirection);
@@ -7239,6 +7241,12 @@ void rotateWhole(bool cwTrueCcwFalse);
 Coord shadow(Uint32 wholeCoords[][whole0Length], const Coord &wholecoord); 
 void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translate);
 Uint32 update(Uint32 interval, void *param);
+
+int absoluteValue(int a) {
+  if (a < 0)
+    return -1 * a;
+  return a;
+}
 
 void applyWhole() {
   for(int i = 0; i < wholeLength; ++i) {
@@ -7261,38 +7269,65 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element) {
   return false;
 }
 
-bool betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color) {
+int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color) {
+  int corridorDirection = -1;
   if (color == red) {
     if (cwTrueCcwFalse)
-      return corridorClockRedCw == directionB;
+      corridorDirection = corridorClockRedCw;
     else
-      return corridorClockRedCcw == directionB;
+      corridorDirection = corridorClockRedCcw;
   }
   if (color == orange) {
     if (cwTrueCcwFalse)
-      return corridorClockOrangeCw == directionB;
+      corridorDirection = corridorClockOrangeCw; 
     else
-      return corridorClockOrangeCcw == directionB;
+      corridorDirection = corridorClockOrangeCcw;
   }
   if (color == yellow) {
     if (cwTrueCcwFalse)
-      return corridorClockYellowCw == directionB;
+      corridorDirection = corridorClockYellowCw;
     else
-      return corridorClockYellowCcw == directionB;
+      corridorDirection = corridorClockYellowCcw;
   }
   if (color == green) {
     if (cwTrueCcwFalse)
-      return corridorClockGreenCw == directionB;
+      corridorDirection = corridorClockGreenCw;
     else
-      return corridorClockGreenCcw == directionB;
+      corridorDirection = corridorClockGreenCcw;
   }
   if (color == blue) {
     if (cwTrueCcwFalse)
-      return corridorClockBlueCw == directionB;
+      corridorDirection = corridorClockBlueCw;
     else
-      return corridorClockBlueCcw == directionB;
+      corridorDirection = corridorClockBlueCcw;
   }
-  return false;
+
+  int corridorDirectionIndex = 999;
+  int directionAIndex = 999;
+  int directionBIndex = 999;
+
+  for (int i = 0; i < clockDirectionsLength; ++i) {
+    if (clockDirections[i] == corridorDirection)
+      corridorDirectionIndex = i; 
+    if (clockDirections[i] == directionA)
+      directionAIndex = i; 
+    if (clockDirections[i] == directionB)
+      directionBIndex = i; 
+  }
+
+  int directionACloseness = minimum(
+    absoluteValue(directionAIndex - corridorDirectionIndex),
+    absoluteValue(directionAIndex - (corridorDirectionIndex + clockDirectionsLength)),
+    absoluteValue((directionAIndex + clockDirectionsLength) - corridorDirectionIndex)
+  );
+ 
+  int directionBCloseness = minimum(
+    absoluteValue(directionBIndex - corridorDirectionIndex),
+    absoluteValue(directionBIndex - (corridorDirectionIndex + clockDirectionsLength)),
+    absoluteValue((directionBIndex + clockDirectionsLength) - corridorDirectionIndex)
+  );
+
+  return (directionACloseness < directionBCloseness) ? directionA : directionB;
 }
 
 Bounds bounds(Uint32 target[][whole0Length]) {
@@ -7549,50 +7584,52 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   whole[curCoords.row][curCoords.col] = bgcolor;
   whole[newCoords.row][newCoords.col] = color;
 
-/****************************
   // Cooridor Procedure:
+  // This needs work. The issue is that entering a corridor from a dead end the direction is straight on
+  // And entering a corridor from 1 adj will have a diagonal direction
   // For each color:
   // 1. If in corridor and no direction is set (such as a piece being in the corridor from initialization),
   //    set its direction to 1. (For now, but see if there's something more logical later.)
   // 2. Keep track of the direction you enter the corridor.
   // 3. Exit the same direction you enter the corridor
-  // 4. If you reach a dead end (3 adjacent), then that's exiting the corridor.
-  // 4b.In this case, you'll re-enter the corridor in the next move in the opposite direction as when you exited.
+  // 4a.If you reach a dead end (3 adjacent), then that's exiting the corridor.
+  // 4b.Note that exiting into a dead end is not exiting diagonally
+  // 4c.In this case, you'll re-enter the corridor in the next move in the opposite direction stored prior
+  //    to exiting.
   // 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
   // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
   // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
 
-    if (color == red) {
-      if (!redInCorridor && inCorridor(red, whole)) {
-        corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-        corridorClockRedCcw = oppositeClock(corridorClockRedCw);
-      }
+  if (color == red) {
+    if (redInCorridor != inCorridor(red, whole)) {
+      corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockRedCcw = oppositeClock(corridorClockRedCw);
     }
-    if (color == orange) {
-      if (!orangeInCorridor && inCorridor(orange, whole)) {
-        corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-        corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
-      }
+  }
+  if (color == orange) {
+    if (orangeInCorridor != inCorridor(orange, whole)) {
+      corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
     }
-    if (color == yellow) {
-      if (!yellowInCorridor && inCorridor(yellow, whole)) {
-        corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-        corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
-      }
+  }
+  if (color == yellow) {
+    if (yellowInCorridor != inCorridor(yellow, whole)) {
+      corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
     }
-    if (color == green) {
-      if (!greenInCorridor && inCorridor(green, whole)) {
-        corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-        corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
-      }
+  }
+  if (color == green) {
+    if (greenInCorridor != inCorridor(green, whole)) {
+      corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
     }
-    if (color == blue) {
-      if (!blueInCorridor && inCorridor(blue, whole)) {
-        corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-        corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
-      }
+  }
+  if (color == blue) {
+    if (blueInCorridor != inCorridor(blue, whole)) {
+      corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
+      corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
     }
-****************************/
+  }
 }
 
 int clockwise(bool cw, int clockDirection) {
@@ -7662,7 +7699,7 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
   Coord redCoords = getCoordsPotentialWhole(red, potentialWhole); 
   Coord orangeCoords = getCoordsPotentialWhole(orange, potentialWhole); 
   Coord yellowCoords = getCoordsPotentialWhole(yellow, potentialWhole);
-  Coord greenCoords= getCoordsPotentialWhole(green, potentialWhole); 
+  Coord greenCoords = getCoordsPotentialWhole(green, potentialWhole); 
   Coord blueCoords = getCoordsPotentialWhole(blue, potentialWhole);
  
   r = inCorridor(redCoords, potentialWhole);
@@ -8131,6 +8168,14 @@ void mirrorWholeHoriz(Uint32 target[][whole0Length]) {
   }
 }
 
+int minimum(int a, int b, int c) {
+  if (a < b && a < c)
+    return a;
+  if (b < a && b < c)
+    return b;
+  return c;
+}
+
 void newBoard() {
   for (int j = 0; j < board0Length; ++j) {
     int r = rand() % 7;
@@ -8151,24 +8196,35 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
       newWholeX[i][j] = bgcolor;
     }
   }
+/**** TODO JMINER UNCOMMENT
   for (int i = 0; i < 7; ++i) { //TODO hardcoded
     for(int j = 0; j < 7; ++j) {
       if (sample7[r * 49 + (i * 7 + j)] == '1')
         newWholeX[i][j] = colorme;
     }
   }
+****************/
+
+  newWholeX[0][0] = colorme;
+  newWholeX[1][0] = colorme;
+  newWholeX[2][0] = colorme;
+  newWholeX[3][0] = colorme;
+  newWholeX[4][0] = colorme;
+  newWholeX[5][0] = colorme;
+  newWholeX[6][0] = colorme;
+  
 
   centerWhole(newWholeX, true);
-  corridorClockRedCw = -1;
-  corridorClockOrangeCw = -1;
-  corridorClockYellowCw = -1;
-  corridorClockGreenCw = -1;
-  corridorClockBlueCw = -1;
-  corridorClockRedCcw = -1;
-  corridorClockOrangeCcw = -1;
-  corridorClockYellowCcw = -1;
-  corridorClockGreenCcw = -1;
-  corridorClockBlueCcw = -1;
+  corridorClockRedCw = 1;
+  corridorClockOrangeCw = 1;
+  corridorClockYellowCw = 1;
+  corridorClockGreenCw = 1;
+  corridorClockBlueCw = 1;
+  corridorClockRedCcw = 1;
+  corridorClockOrangeCcw = 1;
+  corridorClockYellowCcw = 1;
+  corridorClockGreenCcw = 1;
+  corridorClockBlueCcw = 1;
   colorsInCorridor(newWholeX, redInCorridor, orangeInCorridor, yellowInCorridor, greenInCorridor, blueInCorridor);
 }
 
@@ -8324,7 +8380,7 @@ void proc(Uint32 interval) {
 #ifndef DEBUG_MODE
     if (gravityTimer < 0) {
       gravityTimer += gravityTimeout;
-      ++wholecoord.row;
+      //++wholecoord.row; // TODO jminer UNCOMMENT
       for (int i = 0; i < wholeLength; ++i) {
         for (int j = 0; j < whole0Length; ++j) {
           if (whole[i][j] != bgcolor) {
