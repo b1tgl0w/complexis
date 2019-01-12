@@ -7452,8 +7452,16 @@ void centerWhole(Uint32 target[][whole0Length], bool translate) {
 void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   Uint32 state = 0;
   Coord curCoords = getCoords(color);
-  Coord newCoords(curCoords.row, curCoords.col);
-  int newCoordsDirection = -1;
+  Coord newCoords[clockDirectionsLength];
+  int newCoordsDirection[clockDirectionsLength];
+  int newCoordsLastIndex = 0;
+  bool newCoordsAdded = false;
+
+  for (int i = 0; i < clockDirectionsLength; ++i) {
+    newCoords[i].row = curCoords.row;
+    newCoords[i].col = curCoords.col;
+    newCoordsDirection[i] = -1;
+  }
 
   corridorClocks(whole); // This stays up top... called once
 
@@ -7528,6 +7536,9 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
     else if (state == 2) {
     }
     else if (state == 3) {
+      if (newCoordsAdded == true)
+        newCoordsLastIndex++;
+      newCoordsAdded = false;
       invalidMove = false;
       i = numAdj - adjCountRemaining;
       --adjCountRemaining;
@@ -7555,8 +7566,9 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
     else if (state == 5) {
     }
     else if (state == 6) {
-      newCoords = potentialCoords; // TODO copy ctor?
-      newCoordsDirection = clockDirection;
+      newCoords[newCoordsLastIndex] = potentialCoords; // TODO copy ctor?
+      newCoordsDirection[newCoordsLastIndex] = clockDirection;
+      newCoordsAdded = true;
     }
     else if (state == 7) {
       invalidMove = false;
@@ -7576,13 +7588,33 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
     else if (state == 8) {
     }
     else if (state == 9) {
-      newCoords = potentialCoordsDiag; // TODO copy ctor?
-      newCoordsDirection = clockDirectionDiag;
+      newCoords[newCoordsLastIndex] = potentialCoordsDiag; // TODO copy ctor?
+      newCoordsDirection[newCoordsLastIndex] = clockDirectionDiag;
+      newCoordsAdded = true;
+    }
+  }
+
+  Coord newCoordsX(curCoords.row, curCoords.col);
+  int newCoordsDirectionX = -1;
+
+  for(int j = 0; j < clockDirectionsLength; ++j) {
+    for (int k = 0; k < clockDirectionsLength; ++k) {
+      if (newCoords[k].row == curCoords.row && newCoords[k].col == curCoords.col)
+        continue;
+      int a = betterCorridorExit(cwTrueCcwFalse, newCoordsDirection[j], newCoordsDirection[k], color);
+      if (a == newCoordsDirection[j]) {
+        newCoordsX.row = newCoords[j].row;
+        newCoordsX.col = newCoords[j].col;
+      }
+      else if (a == newCoordsDirection[k]) {
+        newCoordsX.row = newCoords[k].row;
+        newCoordsX.col = newCoords[k].col;
+      }
     }
   }
 
   whole[curCoords.row][curCoords.col] = bgcolor;
-  whole[newCoords.row][newCoords.col] = color;
+  whole[newCoordsX.row][newCoordsX.col] = color;
 
   // Cooridor Procedure:
   // This needs work. The issue is that entering a corridor from a dead end the direction is straight on
@@ -7600,34 +7632,36 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
   // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
 
-  if (color == red) {
-    if (redInCorridor != inCorridor(red, whole)) {
-      corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockRedCcw = oppositeClock(corridorClockRedCw);
+  if (newCoordsDirectionX != -1) {
+    if (color == red) {
+      if (redInCorridor != inCorridor(red, whole)) {
+        corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
+        corridorClockRedCcw = oppositeClock(corridorClockRedCw);
+      }
     }
-  }
-  if (color == orange) {
-    if (orangeInCorridor != inCorridor(orange, whole)) {
-      corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
+    if (color == orange) {
+      if (orangeInCorridor != inCorridor(orange, whole)) {
+        corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
+        corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
+      }
     }
-  }
-  if (color == yellow) {
-    if (yellowInCorridor != inCorridor(yellow, whole)) {
-      corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
+    if (color == yellow) {
+      if (yellowInCorridor != inCorridor(yellow, whole)) {
+        corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
+        corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
+      }
     }
-  }
-  if (color == green) {
-    if (greenInCorridor != inCorridor(green, whole)) {
-      corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
+    if (color == green) {
+      if (greenInCorridor != inCorridor(green, whole)) {
+        corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
+        corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
+      }
     }
-  }
-  if (color == blue) {
-    if (blueInCorridor != inCorridor(blue, whole)) {
-      corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirection) : newCoordsDirection;
-      corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
+    if (color == blue) {
+      if (blueInCorridor != inCorridor(blue, whole)) {
+        corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
+        corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
+      }
     }
   }
 }
