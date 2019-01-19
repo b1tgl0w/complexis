@@ -7632,38 +7632,6 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
   // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
 
-  if (newCoordsDirectionX != -1) {
-    if (color == red) {
-      if (redInCorridor != inCorridor(red, whole)) {
-        corridorClockRedCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
-        corridorClockRedCcw = oppositeClock(corridorClockRedCw);
-      }
-    }
-    if (color == orange) {
-      if (orangeInCorridor != inCorridor(orange, whole)) {
-        corridorClockOrangeCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
-        corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCw);
-      }
-    }
-    if (color == yellow) {
-      if (yellowInCorridor != inCorridor(yellow, whole)) {
-        corridorClockYellowCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
-        corridorClockYellowCcw = oppositeClock(corridorClockYellowCw);
-      }
-    }
-    if (color == green) {
-      if (greenInCorridor != inCorridor(green, whole)) {
-        corridorClockGreenCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
-        corridorClockGreenCcw = oppositeClock(corridorClockGreenCw);
-      }
-    }
-    if (color == blue) {
-      if (blueInCorridor != inCorridor(blue, whole)) {
-        corridorClockBlueCw = cwTrueCcwFalse ? oppositeClock(newCoordsDirectionX) : newCoordsDirectionX;
-        corridorClockBlueCcw = oppositeClock(corridorClockBlueCw);
-      }
-    }
-  }
 }
 
 int clockwise(bool cw, int clockDirection) {
@@ -8254,11 +8222,11 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
   corridorClockYellowCw = 1;
   corridorClockGreenCw = 1;
   corridorClockBlueCw = 1;
-  corridorClockRedCcw = 1;
-  corridorClockOrangeCcw = 1;
-  corridorClockYellowCcw = 1;
-  corridorClockGreenCcw = 1;
-  corridorClockBlueCcw = 1;
+  corridorClockRedCcw = 7;
+  corridorClockOrangeCcw = 7;
+  corridorClockYellowCcw = 7;
+  corridorClockGreenCcw = 7;
+  corridorClockBlueCcw = 7;
   colorsInCorridor(newWholeX, redInCorridor, orangeInCorridor, yellowInCorridor, greenInCorridor, blueInCorridor);
 }
 
