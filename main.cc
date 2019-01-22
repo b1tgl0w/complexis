@@ -214,7 +214,7 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 void controller();
 void corridorClocks(Uint32 potentialWhole[][whole0Length]);
-void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
+void corridorClocksColorSwap(Uint32 potentialWhole[][whole0Length], int &a, int &b);
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth);
 int getAdjOccupied(Coord coords, Coord adj[]);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
@@ -872,15 +872,15 @@ void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
   bool r, o, y, g, b;
   colorsInCorridor(potentialWhole, r, o, y, g, b);
   if ((redInCorridor && !r) || (!redInCorridor && r))
-    corridorClocksColor(potentialWhole, corridorClockRedCw, corridorClockRedCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockRedCw, corridorClockRedCcw);
   if ((orangeInCorridor && !o) || (!orangeInCorridor && o))
-    corridorClocksColor(potentialWhole, corridorClockOrangeCw, corridorClockOrangeCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockOrangeCw, corridorClockOrangeCcw);
   if ((yellowInCorridor && !y) || (!yellowInCorridor && y))
-    corridorClocksColor(potentialWhole, corridorClockYellowCw, corridorClockYellowCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockYellowCw, corridorClockYellowCcw);
   if ((greenInCorridor && !g) || (!greenInCorridor && g))
-    corridorClocksColor(potentialWhole, corridorClockGreenCw, corridorClockGreenCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockGreenCw, corridorClockGreenCcw);
   if ((blueInCorridor && !b) || (!blueInCorridor && b))
-    corridorClocksColor(potentialWhole, corridorClockBlueCw, corridorClockBlueCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockBlueCw, corridorClockBlueCcw);
   redInCorridor = r;
   orangeInCorridor = o;
   yellowInCorridor = y;
@@ -888,7 +888,7 @@ void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
   blueInCorridor = b;
 }
 
-void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) {
+void corridorClocksColorSwap(Uint32 potentialWhole[][whole0Length], int &a, int &b) {
   int tmp;
   if (a == -1) {
     a = 1;

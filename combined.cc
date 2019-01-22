@@ -7215,7 +7215,7 @@ void colorsInCorridor(Uint32 potentialWhole[][whole0Length], bool &r, bool &o, b
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 void controller();
 void corridorClocks(Uint32 potentialWhole[][whole0Length]);
-void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b);
+void corridorClocksColorSwap(Uint32 potentialWhole[][whole0Length], int &a, int &b);
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth);
 int getAdjOccupied(Coord coords, Coord adj[]);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
@@ -7463,6 +7463,22 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
     newCoordsDirection[i] = -1;
   }
 
+  // Cooridor Procedure:
+  // This needs work. The issue is that entering a corridor from a dead end the direction is straight on
+  // And entering a corridor from 1 adj will have a diagonal direction
+  // For each color:
+  // 1. If in corridor and no direction is set (such as a piece being in the corridor from initialization),
+  //    set its direction to 1. (For now, but see if there's something more logical later.)
+  // 2. Keep track of the direction you enter the corridor.
+  // 3. Exit the same direction you enter the corridor
+  // 4a.If you reach a dead end (3 adjacent), then that's exiting the corridor.
+  // 4b.Note that exiting into a dead end is not exiting diagonally
+  // 4c.In this case, you'll re-enter the corridor in the next move in the opposite direction stored prior
+  //    to exiting.
+  // 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
+  // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
+  // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
+
   corridorClocks(whole); // This stays up top... called once
 
   Coord adjCoords[4];
@@ -7615,23 +7631,6 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
 
   whole[curCoords.row][curCoords.col] = bgcolor;
   whole[newCoordsX.row][newCoordsX.col] = color;
-
-  // Cooridor Procedure:
-  // This needs work. The issue is that entering a corridor from a dead end the direction is straight on
-  // And entering a corridor from 1 adj will have a diagonal direction
-  // For each color:
-  // 1. If in corridor and no direction is set (such as a piece being in the corridor from initialization),
-  //    set its direction to 1. (For now, but see if there's something more logical later.)
-  // 2. Keep track of the direction you enter the corridor.
-  // 3. Exit the same direction you enter the corridor
-  // 4a.If you reach a dead end (3 adjacent), then that's exiting the corridor.
-  // 4b.Note that exiting into a dead end is not exiting diagonally
-  // 4c.In this case, you'll re-enter the corridor in the next move in the opposite direction stored prior
-  //    to exiting.
-  // 5. Keep track of the button used to enter and exit the corridor, so that the player can reverse direction.
-  // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
-  // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
-
 }
 
 int clockwise(bool cw, int clockDirection) {
@@ -7874,15 +7873,15 @@ void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
   bool r, o, y, g, b;
   colorsInCorridor(potentialWhole, r, o, y, g, b);
   if ((redInCorridor && !r) || (!redInCorridor && r))
-    corridorClocksColor(potentialWhole, corridorClockRedCw, corridorClockRedCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockRedCw, corridorClockRedCcw);
   if ((orangeInCorridor && !o) || (!orangeInCorridor && o))
-    corridorClocksColor(potentialWhole, corridorClockOrangeCw, corridorClockOrangeCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockOrangeCw, corridorClockOrangeCcw);
   if ((yellowInCorridor && !y) || (!yellowInCorridor && y))
-    corridorClocksColor(potentialWhole, corridorClockYellowCw, corridorClockYellowCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockYellowCw, corridorClockYellowCcw);
   if ((greenInCorridor && !g) || (!greenInCorridor && g))
-    corridorClocksColor(potentialWhole, corridorClockGreenCw, corridorClockGreenCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockGreenCw, corridorClockGreenCcw);
   if ((blueInCorridor && !b) || (!blueInCorridor && b))
-    corridorClocksColor(potentialWhole, corridorClockBlueCw, corridorClockBlueCcw);
+    corridorClocksColorSwap(potentialWhole, corridorClockBlueCw, corridorClockBlueCcw);
   redInCorridor = r;
   orangeInCorridor = o;
   yellowInCorridor = y;
@@ -7890,7 +7889,7 @@ void corridorClocks(Uint32 potentialWhole[][whole0Length]) {
   blueInCorridor = b;
 }
 
-void corridorClocksColor(Uint32 potentialWhole[][whole0Length], int &a, int &b) {
+void corridorClocksColorSwap(Uint32 potentialWhole[][whole0Length], int &a, int &b) {
   int tmp;
   if (a == -1) {
     a = 1;
