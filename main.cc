@@ -269,6 +269,12 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element) {
 }
 
 int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color) {
+// TODO DEBUG
+  if (directionA == 5 || directionA == 6 || directionA == 7)
+    return directionA;
+  if (directionB == 5 || directionB == 6 || directionB == 7)
+    return directionB;
+// END DEBUG
   int corridorDirection = -1;
   if (color == red) {
     if (cwTrueCcwFalse)
@@ -581,7 +587,8 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
     else if (state == 5) {
     }
     else if (state == 6) {
-      newCoords[newCoordsLastIndex] = potentialCoords; // TODO copy ctor?
+      newCoords[newCoordsLastIndex].row = potentialCoords.row;
+      newCoords[newCoordsLastIndex].col = potentialCoords.col;
       newCoordsDirection[newCoordsLastIndex] = clockDirection;
       newCoordsAdded = true;
     }
@@ -603,17 +610,19 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
     else if (state == 8) {
     }
     else if (state == 9) {
-      newCoords[newCoordsLastIndex] = potentialCoordsDiag; // TODO copy ctor?
+      newCoords[newCoordsLastIndex].row = potentialCoordsDiag.row;
+      newCoords[newCoordsLastIndex].col = potentialCoordsDiag.col;
       newCoordsDirection[newCoordsLastIndex] = clockDirectionDiag;
       newCoordsAdded = true;
     }
   }
 
   Coord newCoordsX(curCoords.row, curCoords.col);
-  int newCoordsDirectionX = -1;
+  int newCoordsDirectionX = -1; // TODO What is this?
 
   for(int j = 0; j < clockDirectionsLength; ++j) {
-    for (int k = 0; k < clockDirectionsLength; ++k) {
+      printf("(%d), ", newCoordsDirection[j]); // TODO DEBUG
+    for (int k = j; k < clockDirectionsLength; ++k) {
       if (newCoords[k].row == curCoords.row && newCoords[k].col == curCoords.col)
         continue;
       int a = betterCorridorExit(cwTrueCcwFalse, newCoordsDirection[j], newCoordsDirection[k], color);
@@ -627,6 +636,7 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
       }
     }
   }
+  printf("\n\n\n"); // TODO DEBUG
 
   whole[curCoords.row][curCoords.col] = bgcolor;
   whole[newCoordsX.row][newCoordsX.col] = color;
