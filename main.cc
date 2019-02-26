@@ -269,12 +269,6 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element) {
 }
 
 int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color) {
-// TODO DEBUG
-  if (directionA == 5 || directionA == 6 || directionA == 7)
-    return directionA;
-  if (directionB == 5 || directionB == 6 || directionB == 7)
-    return directionB;
-// END DEBUG
   int corridorDirection = -1;
   if (color == red) {
     if (cwTrueCcwFalse)
@@ -618,19 +612,27 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
   }
 
   Coord newCoordsX(curCoords.row, curCoords.col);
-  int newCoordsDirectionX = -1; // TODO What is this?
+  //int newCoordsDirectionX = -1; // TODO What is this?
+
+  if (clockDirectionsLength > 0) {
+    newCoordsX.row = newCoords[0].row;
+    newCoordsX.col = newCoords[0].col;
+  }
 
   for(int j = 0; j < clockDirectionsLength; ++j) {
-      printf("(%d), ", newCoordsDirection[j]); // TODO DEBUG
-    for (int k = j; k < clockDirectionsLength; ++k) {
+    for (int k = j + 1; k < clockDirectionsLength; ++k) {
       if (newCoords[k].row == curCoords.row && newCoords[k].col == curCoords.col)
         continue;
-      int a = betterCorridorExit(cwTrueCcwFalse, newCoordsDirection[j], newCoordsDirection[k], color);
-      if (a == newCoordsDirection[j]) {
+      int clock1 = getClockDirection(curCoords, newCoords[j]);
+      int clock2 = getClockDirection(curCoords, newCoords[k]);
+      int a = betterCorridorExit(cwTrueCcwFalse, clock1, clock2, color);
+      if (a == clock1) {
+        printf("(%d %d %d), ", a, clock1, clock2); // TODO DEBUG
         newCoordsX.row = newCoords[j].row;
         newCoordsX.col = newCoords[j].col;
       }
-      else if (a == newCoordsDirection[k]) {
+      else if (a == clock2) {
+        printf("(%d %d %d), ", a, clock1, clock2); // TODO DEBUG
         newCoordsX.row = newCoords[k].row;
         newCoordsX.col = newCoords[k].col;
       }
