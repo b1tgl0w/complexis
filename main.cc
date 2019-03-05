@@ -683,11 +683,18 @@ int colorIndex(Uint32 color) {
 
 void colorWhole() {
   int colorindex = 0;
-  int numViolet = rand() % 3 + 2;
+  //TODO debug uncomment
+  //int numViolet = rand() % 3 + 2;
+  int numViolet = 3;  //TODO debug remove
   Coord r1 = randomColorMe(whole);
   Coord r2 = randomColorMe(whole);
+  Coord r3 = randomColorMe(whole); //TODO debug remove
+  r1.row = 8; //TODO debug remove
+  r2.row = 9; //TODO debug remove
+  r2.row = 10; //TODO debug remove
   whole[r1.row][r1.col] = violet1;
   whole[r2.row][r2.col] = violet2;
+/* TODO debug uncomment
   if(numViolet > 2) {
     Coord r3 = randomColorMe(whole);
     whole[r3.row][r3.col] = violet3;
@@ -696,6 +703,7 @@ void colorWhole() {
     Coord r4 = randomColorMe(whole);
     whole[r4.row][r4.col] = violet4;
   }
+*/
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
       if (whole[i][j] == colorme) {
@@ -751,7 +759,8 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
       l[lf++]=m+1;
   } while(lf>0);
 
-  return sf==7; // TODO hardcoded
+  //return sf==7; // TODO hardcoded
+  return sf==8; // TODO debug remove
 }
 
 void controller() {
