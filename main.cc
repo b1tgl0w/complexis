@@ -211,7 +211,7 @@ void cloneWhole(Uint32 target[][whole0Length], Uint32 dest[][whole0Length]);
 int colorIndex(Uint32 color);
 void colorWhole();
 void colorsInCorridor(Uint32 potentialWhole[][whole0Length], const Coord &potentialWholeCoords,
-  bool &r, bool &o, bool &y, bool &g, bool &b);
+  int &r, int &o, int &y, int &g, int &b);
 bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]);
 void controller();
 void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whole0Length],
@@ -227,8 +227,8 @@ int getClockDirection(const Coord &center, const Coord &d);
 Coord getCoords(Uint32 color);
 Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length]);
 Coord getPotentialCoords(const Coord & coords, int clockDirection);
-bool inCorridor(const Coord &coords, Uint32 whole[][whole0Length], const Coord &wholeCoords);
-bool inCorridor(Uint32 color, Uint32 whole[][whole0Length], const Coord &wholeCoords);
+int inCorridor(const Coord &coords, Uint32 whole[][whole0Length], const Coord &wholeCoords);
+int inCorridor(Uint32 color, Uint32 whole[][whole0Length], const Coord &wholeCoords);
 bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
 void keyboard();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
@@ -714,7 +714,7 @@ void colorWhole() {
 }
 
 void colorsInCorridor(Uint32 potentialWhole[][whole0Length], const Coord &potentialWholeCoords,
-  bool &r, bool &o, bool &y, bool &g, bool &b) {
+  int &r, int &o, int &y, int &g, int &b) {
   Coord redCoords = getCoordsPotentialWhole(red, potentialWhole); 
   Coord orangeCoords = getCoordsPotentialWhole(orange, potentialWhole); 
   Coord yellowCoords = getCoordsPotentialWhole(yellow, potentialWhole);
@@ -890,27 +890,27 @@ void controller() {
 
 void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whole0Length],
   const Coord &beforeWholeCoords, const Coord &afterWholeCoords) {
-  bool r, o, y, g, b;
-  bool rx, ox, yx, gx, bx;
+  int r, o, y, g, b;
+  int rx, ox, yx, gx, bx;
   colorsInCorridor(beforeWhole, beforeWholeCoords, r, o, y, g, b);
   colorsInCorridor(afterWhole, afterWholeCoords, rx, ox, yx, gx, bx);
-  if (!rx && r) {
+  if (rx == 0 && r != 0) {
     corridorClockRedCw = oppositeClock(corridorClockRedCw);
     corridorClockRedCcw = oppositeClock(corridorClockRedCcw);
   }
-  if (!ox && o) {
+  if (ox == 0 && o != 0) {
     corridorClockOrangeCw = oppositeClock(corridorClockOrangeCw);
     corridorClockOrangeCcw = oppositeClock(corridorClockOrangeCcw);
   }
-  if (!yx && y) {
+  if (yx == 0 && y != 0) {
     corridorClockYellowCw = oppositeClock(corridorClockYellowCw);
     corridorClockYellowCcw = oppositeClock(corridorClockYellowCcw);
   }
-  if (!gx && g) {
+  if (gx == 0 && g != 0) {
     corridorClockGreenCw = oppositeClock(corridorClockGreenCw);
     corridorClockGreenCcw = oppositeClock(corridorClockGreenCcw);
   }
-  if (!bx && b) {
+  if (bx == 0 && b != 0) {
     corridorClockBlueCw = oppositeClock(corridorClockBlueCw);
     corridorClockBlueCcw = oppositeClock(corridorClockBlueCcw);
   }
@@ -935,11 +935,11 @@ void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whol
   // 6. If moving a piece creates a corridor for another piece then reverse the direction of the piece.
   // 7. If moving a piece destroys a corridor for another piece then reverse the direction of the piece.
 
-  bool r, o, y, g, b;
-  bool rx, ox, yx, gx, bx;
+  int r, o, y, g, b;
+  int rx, ox, yx, gx, bx;
   colorsInCorridor(beforeWhole, beforeWholeCoords, r, o, y, g, b);
   colorsInCorridor(afterWhole, afterWholeCoords, rx, ox, yx, gx, bx);
-  if (color == red && !r && rx) {
+  if (color == red && ((r == 0 && rx != 0) || (r != 0 && r != rx))) {
     if (cwTrueCcwFalse) {
       corridorClockRedCw = clockDirection;
       corridorClockRedCcw = oppositeClock(clockDirection);
@@ -949,7 +949,7 @@ void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whol
       corridorClockRedCcw = clockDirection;
     }
   }
-  if (color == orange && !o && ox) {
+  if (color == orange && ((o == 0 && ox != 0) || (o != 0 && o != ox))) {
     if (cwTrueCcwFalse) {
       corridorClockOrangeCw = clockDirection;
       corridorClockOrangeCcw = oppositeClock(clockDirection);
@@ -959,7 +959,7 @@ void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whol
       corridorClockOrangeCcw = clockDirection;
     }
   }
-  if (color == yellow && !y && yx) {
+  if (color == yellow && ((y == 0 && yx != 0) || (y != 0 && y != yx))) {
     if (cwTrueCcwFalse) {
       corridorClockYellowCw = clockDirection;
       corridorClockYellowCcw = oppositeClock(clockDirection);
@@ -969,7 +969,7 @@ void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whol
       corridorClockYellowCcw = clockDirection;
     }
   }
-  if (color == green && !g && gx) {
+  if (color == green && ((g == 0 && gx != 0) || (g != 0 && g != gx))) {
     if (cwTrueCcwFalse) {
       corridorClockGreenCw = clockDirection;
       corridorClockGreenCcw = oppositeClock(clockDirection);
@@ -979,7 +979,7 @@ void corridorClocks(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whol
       corridorClockGreenCcw = clockDirection;
     }
   }
-  if (color == blue && !b && bx) {
+  if (color == blue && ((b == 0 && bx != 0) || (b != 0 && b != bx))) {
     if (cwTrueCcwFalse) {
       corridorClockBlueCw = clockDirection;
       corridorClockBlueCcw = oppositeClock(clockDirection);
@@ -1132,22 +1132,22 @@ Coord getPotentialCoords(const Coord & coords, int clockDirection) {
   return Coord(y, x);
 }
 
-bool inCorridor(Uint32 color, Uint32 wholeEx[][whole0Length], const Coord &wholeExCoords) {
+int inCorridor(Uint32 color, Uint32 wholeEx[][whole0Length], const Coord &wholeExCoords) {
   return inCorridor(getCoords(color), wholeEx, wholeExCoords);
 }
 
-bool inCorridor(const Coord &coords, Uint32 wholeEx[][whole0Length], const Coord &wholeExCoords) {
+int inCorridor(const Coord &coords, Uint32 wholeEx[][whole0Length], const Coord &wholeExCoords) {
   Coord coordsA = Coord(coords.row, coords.col - 1);
   Coord coordsB = Coord(coords.row, coords.col + 1);
   Coord coordsC = Coord(coords.row - 1, coords.col);
   Coord coordsD = Coord(coords.row + 1, coords.col);
   if(isOpen(coordsA, wholeEx, wholeExCoords) && isOpen(coordsB, wholeEx, wholeExCoords)
     && !isOpen(coordsC, wholeEx, wholeExCoords) && !isOpen(coordsD, wholeEx, wholeExCoords))
-    return true;
+    return 1;
   if(isOpen(coordsC, wholeEx, wholeExCoords) && isOpen(coordsD, wholeEx, wholeExCoords)
     && !isOpen(coordsA, wholeEx, wholeExCoords) && !isOpen(coordsB, wholeEx, wholeExCoords))
-    return true;
-  return false;
+    return 2;
+  return 0;
 }
 
 bool isOpen(const Coord & piececoords, Uint32 potentialWhole[][whole0Length], const Coord & wholeCoords) {
