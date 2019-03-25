@@ -16,7 +16,7 @@ debug-mode: EXTRA_CC_FLAGS += -DDEBUG_MODE
 debug-mode: all
 
 BIN = obj/complexis-dc
-OBJS = obj/combined-dc.o
+OBJS = obj/main-dc.o
 TARGET = $(BIN).elf
 
 # Global KallistiOS Makefile include
@@ -75,7 +75,6 @@ endif
 
 dc-pre-build:
 	@echo PREBUILD
-	cat sample7 main.cc > combined-dc.cc
 
 dc-post-build: dc-main-build
 	@echo POSTBUILD

@@ -7,8 +7,16 @@ typedef unsigned int Uint32; //TODO For now
 #include <arch/timer.h>
 #endif
 
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <errno.h>
+#include <fcntl.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/unistd.h>
 #ifdef PLATFORM_DC
 #include <stdio.h>
 #include <dc/maple.h>
@@ -149,6 +157,11 @@ SDL_Renderer *renderer;
 #endif
 Uint32 renderTimeout = 12;
 int renderTimer = static_cast<int>(renderTimeout);
+char *sampleAddr;
+struct stat sampleSb;
+int sampleFd;
+size_t sampleLength = 49;
+off_t sampleOffset, samplePaOffset;
 #ifdef PLATFORM_PC
 SDL_Window *screen;
 #endif
@@ -198,6 +211,7 @@ int absoluteValue(int a);
 void applyWhole();
 bool arrayHas(Uint32 ar[], int size, Uint32 element); // TODO which overload is used?
 bool arrayHas(int a[], int size, int search); // TODO which overload is used?
+void atExitQuit();
 int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
 Bounds bounds(Uint32 target[][whole0Length]);
 #ifdef PLATFORM_DC
@@ -231,6 +245,9 @@ int inCorridor(const Coord &coords, Uint32 whole[][whole0Length], const Coord &w
 int inCorridor(Uint32 color, Uint32 whole[][whole0Length], const Coord &wholeCoords);
 bool isOpen(const Coord & potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord & wholecoord);
 void keyboard();
+void memmapWhole();
+void memmapCleanup();
+void memmapWholeInit();
 void mirrorWholeHoriz(Uint32 target[][whole0Length]);
 int minimum(int a, int b, int c);
 void newBoard();
@@ -271,6 +288,12 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element) {
       return true;
   }
   return false;
+}
+
+void atExitQuit() {
+  // TODO other stuff
+  SDL_Quit();
+  close(sampleFd);
 }
 
 int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint32 color) {
@@ -683,18 +706,16 @@ int colorIndex(Uint32 color) {
 
 void colorWhole() {
   int colorindex = 0;
-  //TODO debug uncomment
-  //int numViolet = rand() % 3 + 2;
-  int numViolet = 3;  //TODO debug remove
+  int numViolet = rand() % 3 + 2;
+  //int numViolet = 3;  //TODO debug remove
   Coord r1 = randomColorMe(whole);
   Coord r2 = randomColorMe(whole);
-  Coord r3 = randomColorMe(whole); //TODO debug remove
-  r1.row = 8; //TODO debug remove
-  r2.row = 9; //TODO debug remove
-  r2.row = 10; //TODO debug remove
+  //Coord r3 = randomColorMe(whole); //TODO debug remove
+  //r1.row = 8; //TODO debug remove
+  //r2.row = 9; //TODO debug remove
+  //r2.row = 10; //TODO debug remove
   whole[r1.row][r1.col] = violet1;
   whole[r2.row][r2.col] = violet2;
-/* TODO debug uncomment
   if(numViolet > 2) {
     Coord r3 = randomColorMe(whole);
     whole[r3.row][r3.col] = violet3;
@@ -703,7 +724,6 @@ void colorWhole() {
     Coord r4 = randomColorMe(whole);
     whole[r4.row][r4.col] = violet4;
   }
-*/
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
       if (whole[i][j] == colorme) {
@@ -759,8 +779,8 @@ bool contiguous(const Coord &startingCoord, Uint32 potential[][whole0Length]) {
       l[lf++]=m+1;
   } while(lf>0);
 
-  //return sf==7; // TODO hardcoded
-  return sf==8; // TODO debug remove
+  return sf==7; // TODO hardcoded
+  //return sf==8; // TODO debug remove
 }
 
 void controller() {
@@ -1261,6 +1281,47 @@ void keyboard() {
 #endif
 }
 
+void memmapWholeInit() {
+  sampleFd = open("sample7.bin", O_RDONLY);
+  if (sampleFd == -1) {
+    char *errmsg = strerror(errno);
+    cerr << "Failed to load data (open) " << errmsg << ". Exiting" << endl;
+    exit(1);
+  }
+  if (fstat(sampleFd, &sampleSb) == -1) {
+    char *errmsg = strerror(errno);
+    cerr << "Failed to load data (stat) " << errmsg << ". Exiting" << endl;
+    exit(1);
+  }
+}
+
+void memmapWhole() {
+  sampleOffset = randomRange(0, 999) * 49; 
+  samplePaOffset = sampleOffset & ~(sysconf(_SC_PAGE_SIZE) - 1);
+
+  if (sampleOffset >= sampleSb.st_size) {
+    cerr << "Failed to load data (offset1 >= sampleSb.st_size). Exiting" << endl;
+    exit(1);
+  }
+
+  sampleLength = 49;
+
+  if (sampleOffset + sampleLength > sampleSb.st_size)
+    sampleLength = sampleSb.st_size - sampleOffset;
+
+  sampleAddr = (char *) mmap(NULL, sampleLength + sampleOffset - samplePaOffset, PROT_READ, MAP_PRIVATE, sampleFd, samplePaOffset);
+  if (sampleAddr == MAP_FAILED) {
+    char *errmsg = strerror(errno);
+    cerr << "Failed to load data mmap." << errmsg << ". Exiting" << endl;
+    exit(1);
+  }
+}
+
+void memmapCleanup() {
+  munmap(sampleAddr, sampleLength + sampleOffset - samplePaOffset);
+  close(sampleFd);
+}
+
 void mirrorWholeHoriz(Uint32 target[][whole0Length]) {
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length / 2; ++j) {
@@ -1293,21 +1354,21 @@ void newBoard() {
 }
 
 void newWhole(Uint32 newWholeX[][whole0Length]) {
-  int r = randomRange(0, 999);
+  memmapWhole();
   for (int i = 0; i < wholeLength; ++i) {
     for (int j = 0; j < whole0Length; ++j) {
       newWholeX[i][j] = bgcolor;
     }
   }
-/**** TODO JMINER UNCOMMENT
   for (int i = 0; i < 7; ++i) { //TODO hardcoded
     for(int j = 0; j < 7; ++j) {
-      if (sample7[r * 49 + (i * 7 + j)] == '1')
+      if (sampleAddr[sampleOffset - samplePaOffset + i * 7 + j] == 1)
         newWholeX[i][j] = colorme;
     }
   }
-****************/
 
+void memmapCleanup();
+/*
   newWholeX[0][0] = colorme;
   newWholeX[1][0] = colorme;
   newWholeX[2][0] = colorme;
@@ -1315,6 +1376,7 @@ void newWhole(Uint32 newWholeX[][whole0Length]) {
   newWholeX[4][0] = colorme;
   newWholeX[5][0] = colorme;
   newWholeX[6][0] = colorme;
+*/
   
 
   centerWhole(newWholeX, true);
@@ -1483,7 +1545,7 @@ void proc(Uint32 interval) {
 #ifndef DEBUG_MODE
     if (gravityTimer < 0) {
       gravityTimer += gravityTimeout;
-      //++wholecoord.row; // TODO jminer UNCOMMENT
+      ++wholecoord.row; // TODO jminer COMMENT
       for (int i = 0; i < wholeLength; ++i) {
         for (int j = 0; j < whole0Length; ++j) {
           if (whole[i][j] != bgcolor) {
@@ -1767,7 +1829,7 @@ int main(int argc, char **argv) {
   srand(time_t(time(0)));
 #ifdef PLATFORM_PC
   SDL_Init(SDL_INIT_VIDEO);
-  atexit(SDL_Quit);
+  atexit(atExitQuit);
   screen = SDL_CreateWindow("My Game Window", SDL_WINDOWPOS_UNDEFINED,
     SDL_WINDOWPOS_UNDEFINED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
   // TODO if (screen == null)
@@ -1809,6 +1871,7 @@ int main(int argc, char **argv) {
 // TODO destroy window release renderer.
 // Here's orig main.
 // TODO Assert whole length and width.
+  memmapWholeInit(); //TODO error handling
   newBoard();
   newWhole(whole);
   colorWhole();

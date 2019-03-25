@@ -12,7 +12,6 @@ debug-mode: all
 pre-build:
 	@echo PREBUILD
 	mkdir -p obj
-	cat sample7 main.cc > combined.cc
 
 post-build: main-build
 	@echo POSTBUILD
@@ -22,12 +21,12 @@ main-build: pre-build
 
 main-target: obj/complexis
 
-obj/complexis: obj/combined.o
-	$(CC) $(CC_FLAGS) obj/combined.o -o obj/complexis -lSDL2 -lSDL2_gfx
+obj/complexis: obj/main.o
+	$(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -lSDL2 -lSDL2_gfx
 
-obj/combined.o: main.cc
-	$(CC) $(CC_FLAGS) -c combined.cc -o obj/combined.o
+obj/main.o: main.cc
+	$(CC) $(CC_FLAGS) -c main.cc -o obj/main.o
 
 clean:
-	rm obj/combined.o obj/complexis
+	rm obj/main.o obj/complexis
 
