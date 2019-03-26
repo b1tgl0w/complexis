@@ -22,7 +22,7 @@ main-build: pre-build
 main-target: obj/complexis
 
 obj/complexis: obj/main.o
-	$(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -lSDL2 -lSDL2_gfx
+	$(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -lSDL2 -lSDL2_gfx -lSDL2_image
 
 obj/main.o: main.cc
 	$(CC) $(CC_FLAGS) -c main.cc -o obj/main.o

@@ -1,6 +1,7 @@
 #ifdef PLATFORM_PC
 #include <SDL2/SDL.h>
-#include <SDL2/SDL2_gfxPrimitives.h>
+#include <SDL2/SDL2_gfxPrimitives.h> // TODO remove
+#include <SDL2/SDL_image.h>
 #endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
 typedef unsigned int Uint32; //TODO For now
@@ -79,6 +80,7 @@ const int blockwidth = 13;
 #endif /* PLATFORM_DC */
 #ifdef PLATFORM_PC
 Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
+SDL_Texture *blueTexture;
 #endif
 #ifdef PLATFORM_DC
 Uint32 blue = 0xff579eff;
@@ -118,6 +120,7 @@ Uint32 gray1 = 0xffc5c5c5; // "hsl(280, 0%, 70%)";
 Uint32 gray2 = 0xffc6c6c5; // gray1 + 1 r.
 #ifdef PLATFORM_PC
 Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
+SDL_Texture *greenTexture;
 #endif
 #ifdef PLATFORM_DC
 Uint32 green = 0xff98ff57;
@@ -141,6 +144,7 @@ int noParam2 = 0;
 bool orangeComboButtonDown = false;
 #ifdef PLATFORM_PC
 Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
+SDL_Texture *orangeTexture;
 #endif
 #ifdef PLATFORM_DC
 Uint32 orange = 0xffff9157;
@@ -148,6 +152,7 @@ Uint32 orange = 0xffff9157;
 bool orangeInCorridor = false;
 #ifdef PLATFORM_PC
 Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
+SDL_Texture *redTexture;
 #endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
 Uint32 red = 0xffff5757;
@@ -200,6 +205,7 @@ Uint32 violet5 = 0xff8457fb;
 #endif
 #ifdef PLATFORM_PC
 Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
+SDL_Texture *yellowTexture;
 #endif
 #ifdef PLATFORM_DC
 Uint32 yellow = 0xffffcb57;
@@ -292,6 +298,12 @@ bool arrayHas(Uint32 ar[], int size, Uint32 element) {
 
 void atExitQuit() {
   // TODO other stuff
+  SDL_DestroyTexture(redTexture);
+  SDL_DestroyTexture(orangeTexture);
+  SDL_DestroyTexture(yellowTexture);
+  SDL_DestroyTexture(greenTexture);
+  SDL_DestroyTexture(blueTexture);
+  IMG_Quit();
   SDL_Quit();
   close(sampleFd);
 }
@@ -1613,18 +1625,40 @@ void renderBoard() {
       //ctx.fillRect(j * blockwidth, i * blockwidth, blockwidth - 1, blockwidth - 1);
     }
   }
+  SDL_Texture *texture;
   Coord shadowcoord = shadow(whole, wholecoord);
+  SDL_Rect dstRect;
+  int boxX;
+  int boxY;
   for(int i = 0; i < wholeLength; ++i) {
     for(int j = 0; j < whole0Length; ++j) {
       if(arrayHas(blockcolors, 10, whole[i][j])){ //TODO hardcoded
-        int boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
-        int boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
-        boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+        texture = NULL;
+        boxX = boardCoord.col + (wholecoord.col + j) * blockwidth;
+        boxY = boardCoord.row + (wholecoord.row + i) * blockwidth;
+        dstRect.x = boxX;
+        dstRect.y = boxY;
+        dstRect.w = blockwidth;
+        dstRect.h = blockwidth;
+        if (whole[i][j] == red)
+          texture = redTexture;
+        else if (whole[i][j] == orange)
+          texture = orangeTexture;
+        else if (whole[i][j] == yellow)
+          texture = yellowTexture;
+        else if (whole[i][j] == green)
+          texture = greenTexture;
+        else if (whole[i][j] == blue)
+          texture = blueTexture;
+        if (texture == NULL)
+          boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+        else
+          SDL_RenderCopy(renderer, texture, NULL, &dstRect);
         drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j], 2);
         int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
         Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x40000000; //TODO endian bug
-        boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor);
+        //boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor); //TODO reimplement shadow
         // Don't draw shadow on dreamcast because we don't use translucency
       }
     }
@@ -1639,8 +1673,8 @@ void renderBoard() {
     if (full == true) {
       for(int j = 0; j < board0Length; ++j) {
         if(board[i][j]) {
-          int boxX = boardCoord.col + j * blockwidth;
-          int boxY = boardCoord.row + i * blockwidth;
+          boxX = boardCoord.col + j * blockwidth;
+          boxY = boardCoord.row + i * blockwidth;
           boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5]); //TODO hardcoded
           drawSquare(boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5], 2); //TODO hardcoded
         }
@@ -1649,8 +1683,8 @@ void renderBoard() {
     else {
       for(int j = 0; j < board0Length; ++j) {
         if(board[i][j]) {
-          int boxX = boardCoord.col + j * blockwidth;
-          int boxY = boardCoord.row + i * blockwidth;
+          boxX = boardCoord.col + j * blockwidth;
+          boxY = boardCoord.row + i * blockwidth;
           boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
           drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1, 2);
         }
@@ -1829,6 +1863,7 @@ int main(int argc, char **argv) {
   srand(time_t(time(0)));
 #ifdef PLATFORM_PC
   SDL_Init(SDL_INIT_VIDEO);
+  IMG_Init(IMG_INIT_PNG);
   atexit(atExitQuit);
   screen = SDL_CreateWindow("My Game Window", SDL_WINDOWPOS_UNDEFINED,
     SDL_WINDOWPOS_UNDEFINED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -1839,6 +1874,11 @@ int main(int argc, char **argv) {
   SDL_RenderSetLogicalSize(renderer, 1824, 984);
   boardCoord.col = 1824 / 2 - board0Length * blockwidth / 2;
   boardCoord.row = 984 / 2 - boardLength * blockwidth / 2;
+  redTexture = IMG_LoadTexture(renderer, "./graphics/Q.png");
+  orangeTexture = IMG_LoadTexture(renderer, "./graphics/R.png");
+  yellowTexture = IMG_LoadTexture(renderer, "./graphics/B.png");
+  greenTexture = IMG_LoadTexture(renderer, "./graphics/Kt.png");
+  blueTexture = IMG_LoadTexture(renderer, "./graphics/P.png");
   if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
     bgcolor = SDL_Swap32(bgcolor);
     red = SDL_Swap32(red);
