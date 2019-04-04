@@ -71,7 +71,7 @@ Coord &Coord::operator=(const Coord &rhs) {
   return *this;
 }
 
-Uint32 bgcolor = 0xffa7a7a7; //"hsl(50, 7%, 97%)";
+Uint32 bgcolor = 0xffdddddd;
 #ifdef PLATFORM_PC
 const int blockwidth = 25;
 #endif /* PLATFORM_PC */
@@ -79,7 +79,7 @@ const int blockwidth = 25;
 const int blockwidth = 13;
 #endif /* PLATFORM_DC */
 #ifdef PLATFORM_PC
-Uint32 blue = 0xffecdfc6; //"hsl(200, 45%, 70%)";
+Uint32 blue = 0xffffca67;
 SDL_Texture *blueTexture;
 #endif
 #ifdef PLATFORM_DC
@@ -116,17 +116,16 @@ int corridorClockYellowCw = -1;
 int corridorClockYellowCcw = -1;
 const int gravityTimeout = 750;
 int gravityTimer = gravityTimeout;
-Uint32 gray1 = 0xffc5c5c5; // "hsl(280, 0%, 70%)";
-Uint32 gray2 = 0xffc6c6c5; // gray1 + 1 r.
+Uint32 gray1 = 0xfffd66c0; // This is violet, now, not gray, make sure not same value as other violets for game mechanics
+Uint32 gray2 = 0xfffd66c1; // gray1 + 1 r.
 #ifdef PLATFORM_PC
-Uint32 green = 0xffc6e6e0; // "hsl(80, 45%, 70%)";
+Uint32 green = 0xff67ffb3;
 SDL_Texture *greenTexture;
 #endif
 #ifdef PLATFORM_DC
-Uint32 green = 0xff98ff57;
+Uint32 green = 0xff76ff67;
 #endif
 bool greenInCorridor = false;
-//let highlight: string = "hsl(250, 100%, 80%)";
 Uint32 keystate = 0;
 Uint32 keystateprev = 0;
 int moveTimeout = 144;
@@ -143,7 +142,7 @@ int noParam = 0;
 int noParam2 = 0;
 bool orangeComboButtonDown = false;
 #ifdef PLATFORM_PC
-Uint32 orange = 0xffc6d9ec; //"hsl(30, 45%, 70%)";
+Uint32 orange = 0xff67bbff;
 SDL_Texture *orangeTexture;
 #endif
 #ifdef PLATFORM_DC
@@ -151,7 +150,7 @@ Uint32 orange = 0xffff9157;
 #endif
 bool orangeInCorridor = false;
 #ifdef PLATFORM_PC
-Uint32 red = 0xffc6c6ec; //"hsl(0, 45%, 70%)";
+Uint32 red = 0xff6767ff; 
 SDL_Texture *redTexture;
 #endif /* PLATFORM_PC */
 #ifdef PLATFORM_DC
@@ -190,11 +189,11 @@ Uint32 whole[wholeLength][whole0Length] = {
   { bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor, bgcolor}
 };
 #ifdef PLATFORM_PC
-Uint32 violet1 = 0xffecc6e0; //"hsl(280, 45%, 70%)";
-Uint32 violet2 = 0xffecc6e1;
-Uint32 violet3 = 0xffedc6e0;
-Uint32 violet4 = 0xffedc6e1;
-Uint32 violet5 = 0xffedc6e2;
+Uint32 violet1 = 0xfffd66c2;
+Uint32 violet2 = 0xfffd66c3;
+Uint32 violet3 = 0xffff66c4;
+Uint32 violet4 = 0xffff66c5;
+Uint32 violet5 = 0xffff66c6;
 #endif
 #ifdef PLATFORM_DC
 Uint32 violet1 = 0xff8457ff;
@@ -204,7 +203,7 @@ Uint32 violet4 = 0xff8457fc;
 Uint32 violet5 = 0xff8457fb;
 #endif
 #ifdef PLATFORM_PC
-Uint32 yellow = 0xffc6e6ec; //"hsl(50, 45%, 70%)";
+Uint32 yellow = 0xff67fcff;
 SDL_Texture *yellowTexture;
 #endif
 #ifdef PLATFORM_DC
