@@ -1616,7 +1616,7 @@ void renderBoard() {
   pvr_list_begin(PVR_LIST_OP_POLY);
   pvr_prim(&poly, sizeof(poly));
 #endif /* PLATFORM_DC */
-  boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
+  //boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
   drawSquare(boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor, 1);
   for(int i = 0; i < boardLength; ++i) {
     for(int j = 0; j < board0Length; ++j) {
@@ -1650,7 +1650,7 @@ void renderBoard() {
         else if (whole[i][j] == blue)
           texture = blueTexture;
         if (texture == NULL)
-          boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+          ;//boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
         else
           SDL_RenderCopy(renderer, texture, NULL, &dstRect);
         drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j], 2);
@@ -1674,7 +1674,7 @@ void renderBoard() {
         if(board[i][j]) {
           boxX = boardCoord.col + j * blockwidth;
           boxY = boardCoord.row + i * blockwidth;
-          boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5]); //TODO hardcoded
+          //boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5]); //TODO hardcoded
           drawSquare(boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5], 2); //TODO hardcoded
         }
       }
@@ -1684,7 +1684,7 @@ void renderBoard() {
         if(board[i][j]) {
           boxX = boardCoord.col + j * blockwidth;
           boxY = boardCoord.row + i * blockwidth;
-          boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
+          //boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
           drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1, 2);
         }
       }
