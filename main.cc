@@ -18,6 +18,7 @@ typedef unsigned int Uint32; //TODO For now
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/unistd.h>
+#include <unistd.h>
 #ifdef PLATFORM_DC
 #include <stdio.h>
 #include <dc/maple.h>
