@@ -8,9 +8,9 @@ typedef unsigned int Uint32; //TODO For now
 #include <arch/timer.h>
 #endif
 
-#include <cstdio>
-#include <cstdlib>
-#include <ctime>
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
@@ -25,9 +25,6 @@ typedef unsigned int Uint32; //TODO For now
 #include <dc/maple/controller.h>
 #include <dc/pvr.h>
 #endif
-#include <iostream>
-
-using namespace std;
 
 struct Bounds {
   int left;
@@ -115,7 +112,7 @@ int corridorClockRedCw = -1;
 int corridorClockRedCcw = -1;
 int corridorClockYellowCw = -1;
 int corridorClockYellowCcw = -1;
-const int gravityTimeout = 750;
+const int gravityTimeout = 2750;
 int gravityTimer = gravityTimeout;
 Uint32 gray1 = 0xfffd66c0; // This is violet, now, not gray, make sure not same value as other violets for game mechanics
 Uint32 gray2 = 0xfffd66c1; // gray1 + 1 r.
@@ -353,11 +350,6 @@ int betterCorridorExit(bool cwTrueCcwFalse, int directionA, int directionB, Uint
     if (clockDirections[i] == directionB)
       directionBIndex = i; 
   }
-
-  std::cout << "corridorDirection: " << clockDirections[corridorDirectionIndex] << ", directionA: "
-    << clockDirections[directionAIndex] << ", directionB: " << clockDirections[directionBIndex];
-  std::cout << "\tcorridorDirectionIndex: " << corridorDirectionIndex << ", directionAIndex: "
-    << directionAIndex << ", directionBIndex: " << directionBIndex << std::endl;
 
   int directionACloseness = minimum(
     absoluteValue(directionAIndex - corridorDirectionIndex),
@@ -652,7 +644,6 @@ void clockMove(Uint32 color, bool cwTrueCcwFalse) {
         continue;
       int clock1 = getClockDirection(curCoords, newCoords[j]);
       int clock2 = getClockDirection(curCoords, newCoords[k]);
-      cout << "hmmm" << endl;
       int a = betterCorridorExit(cwTrueCcwFalse, clock1, clock2, color);
       if (a == clock1) {
         //printf("(%d %d %d), ", a, clock1, clock2); // TODO DEBUG
@@ -1297,12 +1288,10 @@ void memmapWholeInit() {
   sampleFd = open("sample7.bin", O_RDONLY);
   if (sampleFd == -1) {
     char *errmsg = strerror(errno);
-    cerr << "Failed to load data (open) " << errmsg << ". Exiting" << endl;
     exit(1);
   }
   if (fstat(sampleFd, &sampleSb) == -1) {
     char *errmsg = strerror(errno);
-    cerr << "Failed to load data (stat) " << errmsg << ". Exiting" << endl;
     exit(1);
   }
 }
@@ -1312,7 +1301,6 @@ void memmapWhole() {
   samplePaOffset = sampleOffset & ~(sysconf(_SC_PAGE_SIZE) - 1);
 
   if (sampleOffset >= sampleSb.st_size) {
-    cerr << "Failed to load data (offset1 >= sampleSb.st_size). Exiting" << endl;
     exit(1);
   }
 
@@ -1324,7 +1312,6 @@ void memmapWhole() {
   sampleAddr = (char *) mmap(NULL, sampleLength + sampleOffset - samplePaOffset, PROT_READ, MAP_PRIVATE, sampleFd, samplePaOffset);
   if (sampleAddr == MAP_FAILED) {
     char *errmsg = strerror(errno);
-    cerr << "Failed to load data mmap." << errmsg << ". Exiting" << endl;
     exit(1);
   }
 }
@@ -1617,7 +1604,7 @@ void renderBoard() {
   pvr_list_begin(PVR_LIST_OP_POLY);
   pvr_prim(&poly, sizeof(poly));
 #endif /* PLATFORM_DC */
-  //boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
+  boxColor(renderer, boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor);
   drawSquare(boardCoord.col, boardCoord.row, boardCoord.col + board0Length * blockwidth, boardCoord.row + boardLength * blockwidth, bgcolor, 1);
   for(int i = 0; i < boardLength; ++i) {
     for(int j = 0; j < board0Length; ++j) {
@@ -1651,14 +1638,14 @@ void renderBoard() {
         else if (whole[i][j] == blue)
           texture = blueTexture;
         if (texture == NULL)
-          ;//boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
+          boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j]);
         else
           SDL_RenderCopy(renderer, texture, NULL, &dstRect);
         drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, whole[i][j], 2);
         int shadowX = boardCoord.col + (shadowcoord.col + j) * blockwidth;
         int shadowY = boardCoord.row + (shadowcoord.row + i) * blockwidth;
         Uint32 shadowcolor = (whole[i][j] & 0x00ffffff) | 0x40000000; //TODO endian bug
-        //boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor); //TODO reimplement shadow
+        boxColor(renderer, shadowX + 2, shadowY + 2, shadowX + blockwidth - 1, shadowY + blockwidth - 1, shadowcolor); //TODO reimplement shadow
         // Don't draw shadow on dreamcast because we don't use translucency
       }
     }
@@ -1675,7 +1662,7 @@ void renderBoard() {
         if(board[i][j]) {
           boxX = boardCoord.col + j * blockwidth;
           boxY = boardCoord.row + i * blockwidth;
-          //boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5]); //TODO hardcoded
+          boxColor(renderer, boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5]); //TODO hardcoded
           drawSquare(boxX, boxY, boxX + blockwidth - 1, boxY + blockwidth - 1, blockcolors[j % 5], 2); //TODO hardcoded
         }
       }
@@ -1685,7 +1672,7 @@ void renderBoard() {
         if(board[i][j]) {
           boxX = boardCoord.col + j * blockwidth;
           boxY = boardCoord.row + i * blockwidth;
-          //boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
+          boxColor(renderer, boxX + 2, boxY + 2, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1);
           drawSquare(boxX + 1, boxY + 1, boxX + blockwidth - 1, boxY + blockwidth - 1, gray1, 2);
         }
       }
