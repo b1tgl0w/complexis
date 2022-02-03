@@ -17,6 +17,7 @@
      misrepresented as being the original software.
   3. This notice may not be removed or altered from any source distribution.
 */
+#define _POSIX_C_SOURCE 199309L
 #ifdef PLATFORM_PC
 #include <SDL2/SDL.h>
 #include <SDL2/SDL2_gfxPrimitives.h> /* TODO remove */
