@@ -1,3 +1,4 @@
+* Initialize all variables at declaration.
 * corridorClocks on translating and rotating whole
 * Check all if statements using if (someobject) to check that it's not
 undefined.
