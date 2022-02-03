@@ -1,4 +1,5 @@
 * Initialize all variables at declaration.
+* Add volatile variable writes to loops to prevent optimization by present or future compilers
 * corridorClocks on translating and rotating whole
 * Check all if statements using if (someobject) to check that it's not
 undefined.
