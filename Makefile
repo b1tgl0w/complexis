@@ -1,7 +1,7 @@
-ENVP= MACOSX_DEPLOYMENT_TARGET=10.7
+ENVP= MACOSX_DEPLOYMENT_TARGET=10.6
 CC := gcc
 ifeq ($(MAKELEVEL),0)
-export CC_FLAGS = -DPLATFORM_PC --std=c++98 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wmaybe-uninitialized -Wuninitialized -stdlib=libc++
+export CC_FLAGS = -DPLATFORM_PC -ferror-limit=300 -std=c17 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-declarations -Wmissing-include-dirs -Wnoexcept -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-null-sentinel -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wmaybe-uninitialized -Wuninitialized
 endif
 
 .PHONY: all clean
@@ -29,8 +29,8 @@ obj/complexis: obj/main.o
 	$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -lSDL2 -lSDL2_gfx -lSDL2_image -lpthread -ldl -lm
 	#$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -Wl,-Bstatic /home/cy/elib/lib/libSDL2.a /home/cy/elib/lib/libSDL2main.a /home/cy/elib/lib/libSDL2_image.a -Wl,-Bdynamic -lpthread -ldl -lm
 
-obj/main.o: main.cc
-	$(ENVP) $(CC) $(CC_FLAGS) -c main.cc -o obj/main.o
+obj/main.o: main.c
+	$(ENVP) $(CC) $(CC_FLAGS) -c main.c -o obj/main.o
 
 clean:
 	rm obj/main.o obj/complexis
