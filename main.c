@@ -130,8 +130,9 @@ int renderTimer = renderTimeout;
 char *sampleAddr;
 struct stat sampleSb;
 int sampleFd;
-size_t sampleLength = 49;
-off_t sampleOffset, samplePaOffset;
+off_t sampleLength = 49;
+off_t sampleOffset;
+off_t samplePaOffset;
 #ifdef PLATFORM_PC
 SDL_Window *screen;
 #endif
@@ -204,7 +205,6 @@ void corridorClocks1(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][who
 void corridorClocks2(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][whole0Length],
   const Coord *beforeWholeCoords, const Coord *afterWholeCoords,
   Uint32 color, int clockDirection, bool cwTrueCcwFalse);
-void corridorClocksColorSwap(Uint32 potentialWhole[][whole0Length], int *a, int *b);
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth);
 int getAdjOccupied(Coord coords, Coord adj[]);
 Coord getCenterCoords(Uint32 target[][whole0Length]);
@@ -990,20 +990,11 @@ void corridorClocks2(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][who
   corridorClocks1(beforeWhole, afterWhole, beforeWholeCoords, afterWholeCoords);
 }
 
-void corridorClocksColorSwap(Uint32 potentialWhole[][whole0Length], int *a, int *b) {
-  int tmp;
-  if (*a == -1) {
-    *a = 1;
-    *b = 7;
-  }
-  else {
-    tmp = *a;
-    *a = *b;
-    *b = tmp;
-  }
-}
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth) {
+  color = color + 0;
+  depth = depth + 0;
 #ifdef PLATFORM_DC
   pvr_vertex_t vert;
   vert.flags = PVR_CMD_VERTEX;
@@ -1027,6 +1018,7 @@ void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth) {
   pvr_prim(&vert, sizeof(vert));
 #endif /* PLATFORM_DC */
 }
+#pragma GCC diagnostic pop
 
 int getAdjOccupied(Coord coords, Coord adj[]) {
   int idx=0;
@@ -1174,18 +1166,18 @@ int inCorridor1(const Coord *coords, Uint32 wholeEx[][whole0Length], const Coord
   coordsC.col = coords->col;
   coordsD.row = coords->row + 1;
   coordsD.col = coords->col;
-  if(isOpen(&coordsA, wholeEx, &wholeExCoords) && isOpen(&coordsB, wholeEx, &wholeExCoords)
-    && !isOpen(&coordsC, wholeEx, &wholeExCoords) && !isOpen(&coordsD, wholeEx, &wholeExCoords))
+  if(isOpen(&coordsA, wholeEx, wholeExCoords) && isOpen(&coordsB, wholeEx, wholeExCoords)
+    && !isOpen(&coordsC, wholeEx, wholeExCoords) && !isOpen(&coordsD, wholeEx, wholeExCoords))
     return 1;
-  if(isOpen(&coordsC, wholeEx, &wholeExCoords) && isOpen(&coordsD, wholeEx, &wholeExCoords)
-    && !isOpen(&coordsA, wholeEx, &wholeExCoords) && !isOpen(&coordsB, wholeEx, &wholeExCoords))
+  if(isOpen(&coordsC, wholeEx, wholeExCoords) && isOpen(&coordsD, wholeEx, wholeExCoords)
+    && !isOpen(&coordsA, wholeEx, wholeExCoords) && !isOpen(&coordsB, wholeEx, wholeExCoords))
     return 2;
   return 0;
 }
 
 int inCorridor2(Uint32 color, Uint32 wholeEx[][whole0Length], const Coord *wholeExCoords) {
   Coord c = getCoords(color);
-  return inCorridor1(&c, wholeEx, &wholeExCoords);
+  return inCorridor1(&c, wholeEx, wholeExCoords);
 }
 
 
@@ -1847,6 +1839,8 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, bool translat
       wholecoord.col++;
   }
 }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 Uint32 update(Uint32 interval, void *param) {
   moveTimerRed -= (int)(interval & 0x7fffffff);
   moveTimerOrange -= (int)(interval & 0x7fffffff);
@@ -1866,11 +1860,11 @@ Uint32 update(Uint32 interval, void *param) {
     SDL_RenderPresent(renderer);
 #endif
   }
-  param = param; // To suppress warning;
   keystateprev = keystate;
   controllerstateprev = controllerstate;
   return interval;
 }
+#pragma GCC diagnostic pop
 
 #ifdef PLATFORM_DC
 pvr_init_params_t pvr_params = {
@@ -1880,10 +1874,10 @@ pvr_init_params_t pvr_params = {
 };
 #endif /* PLATFORM_DC */
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 int main(int argc, char **argv) {
 /* TODO wiki.libsdl.org create window "you must set the nshighresolutioncapable info.plist property to YES" on mac. */
-  argc = argc; // To suppress warning
-  argv = argv; // To suppress warning
   srand((time_t)time(0));
 #ifdef PLATFORM_PC
   SDL_Init(SDL_INIT_VIDEO);
@@ -1969,3 +1963,5 @@ int main(int argc, char **argv) {
 #endif
   return 0;
 }
+#pragma GCC diagnostic pop
+#pragma GCC diagnostic ignored "-Wunused-parameter"
