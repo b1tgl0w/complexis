@@ -204,7 +204,7 @@ int arrayHas1(int a[], int size, int search);
 int arrayHas2(Uint32 ar[], int size, Uint32 element);
 void atExitQuit();
 int betterCorridorExit(int cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
-Bounds bounds(Uint32 target[][whole0Length]);
+void bounds(Uint32 target[][whole0Length], Bounds *ret);
 #ifdef PLATFORM_DC
 void boxColor(...);
 #endif /* PLATFORM_DC */
@@ -226,11 +226,11 @@ void corridorClocks2(Uint32 beforeWhole[][whole0Length], Uint32 afterWhole[][who
   Uint32 color, int clockDirection, int cwTrueCcwFalse);
 void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth);
 int getAdjOccupied(Coord coords, Coord adj[]);
-Coord getCenterCoords(Uint32 target[][whole0Length]);
+void getCenterCoords(Uint32 target[][whole0Length], Coord *ret);
 int getClockDirection(const Coord *center, const Coord *d);
-Coord getCoords(Uint32 color);
-Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length]);
-Coord getPotentialCoords(const Coord *coords, int clockDirection);
+void getCoords(Uint32 color, Coord *ret);
+void getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length], Coord *ret);
+void getPotentialCoords(const Coord *coords, int clockDirection, Coord *ret);
 int inCorridor1(const Coord *coords, Uint32 whole[][whole0Length], const Coord *wholeCoords);
 int inCorridor2(Uint32 color, Uint32 whole[][whole0Length], const Coord *wholeCoords);
 int isOpen(const Coord *potentialcoords, Uint32 potentialWhole[][whole0Length], const Coord *wholecoord);
@@ -244,12 +244,12 @@ void newBoard();
 void newWhole(Uint32 newWholeX[][whole0Length]);
 int oppositeClock(int clockDirection);
 void proc(Uint32 interval);
-Coord randomColorMe(Uint32 potentialWhole[][whole0Length]);
+void randomColorMe(Uint32 potentialWhole[][whole0Length], Coord *ret);
 int randomRange(int min, int max);
 void renderBoard();
 void renderUi();
 void rotateWhole(int cwTrueCcwFalse);
-Coord shadow(Uint32 wholeCoords[][whole0Length], const Coord *wholecoord); 
+void shadow(Uint32 wholeCoords[][whole0Length], const Coord *wholecoord, Coord *ret); 
 void shiftWhole(Uint32 target[][whole0Length], int clockDirection, int translate);
 Uint32 update(Uint32 interval, void *param);
 
@@ -359,14 +359,13 @@ int betterCorridorExit(int cwTrueCcwFalse, int directionA, int directionB, Uint3
   return (directionACloseness < directionBCloseness) ? directionA : directionB;
 }
 
-Bounds bounds(Uint32 target[][whole0Length]) {
+void bounds(Uint32 target[][whole0Length], Bounds *ret) {
   int minx = 999;
   int maxx = -1;
   int miny = 999;
   int maxy = -1;
   int i = 0;
   int j = 0;
-  Bounds b;
   for (i = 0; i < wholeLength; ++i) {
     for (j = 0; j < whole0Length; ++j) {
       if(target[i][j] != bgcolor) {
@@ -382,11 +381,10 @@ Bounds bounds(Uint32 target[][whole0Length]) {
     }
   }
   
-  b.left = minx;
-  b.right = maxx;
-  b.top = miny;
-  b.bottom = maxy;
-  return b;
+  ret->left = minx;
+  ret->right = maxx;
+  ret->top = miny;
+  ret->bottom = maxy;
 }
 
 #ifdef PLATFORM_DC
@@ -422,10 +420,12 @@ void capitalizeRows() {
 }
 
 void centerWhole(Uint32 target[][whole0Length], int translate) {
-  Coord center = getCenterCoords(target);
-  Bounds b = bounds(target);
+  Coord center;
+  Bounds b;
   int evenVert = 0;
   int evenHoriz = 0;
+  getCenterCoords(target, &center);
+  bounds(target, &b);
   if ((b.bottom - b.top) % 2 == 1)
     evenVert = 1;
   if ((b.right - b.left) % 2 == 1)
@@ -491,7 +491,7 @@ void centerWhole(Uint32 target[][whole0Length], int translate) {
 
 void clockMove(Uint32 color, int cwTrueCcwFalse) {
   Uint32 state = 0;
-  Coord curCoords = getCoords(color);
+  Coord curCoords;
   Coord newCoords[clockDirectionsLength];
   int newCoordsDirection[clockDirectionsLength];
   int newCoordsLastIndex = 0;
@@ -514,6 +514,7 @@ void clockMove(Uint32 color, int cwTrueCcwFalse) {
   int clockDirection;
   int clockDirectionDiag;
   int invalidMove = 0;
+  getCoords(color, &curCoords);
 
   for (i = 0; i < clockDirectionsLength; ++i) {
     newCoords[i].row = curCoords.row;
@@ -602,12 +603,12 @@ void clockMove(Uint32 color, int cwTrueCcwFalse) {
       cw2 = clockwise(cwTrueCcwFalse, cw);
       if (cw == -1 || cw2 == -1)
         invalidMove = 1;
-      step1 = getPotentialCoords(&adjCoords[i], cw);
+      getPotentialCoords(&adjCoords[i], cw, &step1);
       if (step1.row == -1 || step1.col == -1)
         invalidMove = 1;
       cloneWhole(whole, step1Whole); /*TODO array copy*/
       step1Whole[curCoords.row][curCoords.col] = bgcolor;
-      potentialCoords = getPotentialCoords(&adjCoords[i], cw2);
+      getPotentialCoords(&adjCoords[i], cw2, &potentialCoords);
       if (potentialCoords.row == -1 || potentialCoords.col == -1)
         invalidMove = 1;
       cloneWhole(whole, potentialWhole); /*TODO array copy*/
@@ -633,7 +634,7 @@ void clockMove(Uint32 color, int cwTrueCcwFalse) {
       cwDiag = clockwise(cwTrueCcwFalse, clockDirectionDiag);
       if (cwDiag == -1)
         invalidMove = 1;
-      potentialCoordsDiag = getPotentialCoords(&potentialCoords, cwDiag);
+      getPotentialCoords(&potentialCoords, cwDiag, &potentialCoordsDiag);
       if (potentialCoordsDiag.row == -1 || potentialCoordsDiag.col == -1)
         invalidMove = 1;
       cloneWhole(whole, potentialWholeDiag); /*TODO array copy*/
@@ -739,8 +740,10 @@ void colorWhole() {
   int colorindex = 0;
   int numViolet = rand() % 3 + 2;
   /*int numViolet = 3;  TODO debug remove*/
-  Coord r1 = randomColorMe(whole);
-  Coord r2 = randomColorMe(whole);
+  Coord r1;
+  Coord r2;
+  randomColorMe(whole, &r1);
+  randomColorMe(whole, &r2);
   /*Coord r3 = randomColorMe(whole); TODO debug remove*/
   /*r1.row = 8; TODO debug remove*/
   /*r2.row = 9; TODO debug remove*/
@@ -748,11 +751,13 @@ void colorWhole() {
   whole[r1.row][r1.col] = violet1;
   whole[r2.row][r2.col] = violet2;
   if(numViolet > 2) {
-    Coord r3 = randomColorMe(whole);
+    Coord r3;
+    randomColorMe(whole, &r3);
     whole[r3.row][r3.col] = violet3;
   }
   if(numViolet > 3) {
-    Coord r4 = randomColorMe(whole);
+    Coord r4;
+    randomColorMe(whole, &r4);
     whole[r4.row][r4.col] = violet4;
   }
   for (i = 0; i < wholeLength; ++i) {
@@ -766,11 +771,16 @@ void colorWhole() {
 
 void colorsInCorridor(Uint32 potentialWhole[][whole0Length], const Coord *potentialWholeCoords,
   int *r, int *o, int *y, int *g, int *b) {
-  Coord redCoords = getCoordsPotentialWhole(red, potentialWhole); 
-  Coord orangeCoords = getCoordsPotentialWhole(orange, potentialWhole); 
-  Coord yellowCoords = getCoordsPotentialWhole(yellow, potentialWhole);
-  Coord greenCoords = getCoordsPotentialWhole(green, potentialWhole); 
-  Coord blueCoords = getCoordsPotentialWhole(blue, potentialWhole);
+  Coord redCoords;
+  Coord orangeCoords; 
+  Coord yellowCoords;
+  Coord greenCoords;
+  Coord blueCoords;
+  getCoordsPotentialWhole(red, potentialWhole, &redCoords); 
+  getCoordsPotentialWhole(orange, potentialWhole, &orangeCoords); 
+  getCoordsPotentialWhole(yellow, potentialWhole, &yellowCoords);
+  getCoordsPotentialWhole(green, potentialWhole, &greenCoords); 
+  getCoordsPotentialWhole(blue, potentialWhole, &blueCoords);
  
   *r = inCorridor1(&redCoords, potentialWhole, potentialWholeCoords);
   *o = inCorridor1(&orangeCoords, potentialWhole, potentialWholeCoords);
@@ -1110,12 +1120,11 @@ int getAdjOccupied(Coord coords, Coord adj[]) {
   return idx;
 }
 
-Coord getCenterCoords(Uint32 target[][whole0Length]) {
-  Bounds b = bounds(target);
-  Coord c;
-  c.row = (int)(((b.bottom - b.top) / 2 + b.top));
-  c.col = (int)(((b.right - b.left) / 2 + b.left));
-  return c;
+void getCenterCoords(Uint32 target[][whole0Length], Coord *ret) {
+  Bounds b;
+  bounds(target, &b);
+  ret->row = (int)(((b.bottom - b.top) / 2 + b.top));
+  ret->col = (int)(((b.right - b.left) / 2 + b.left));
 }
 
 int getClockDirection(const Coord *center, const Coord *d) {
@@ -1148,35 +1157,31 @@ int getClockDirection(const Coord *center, const Coord *d) {
   return -1;
 }
 
-Coord getCoords(Uint32 color) {
-  return getCoordsPotentialWhole(color, whole);
+void getCoords(Uint32 color, Coord *ret) {
+  getCoordsPotentialWhole(color, whole, ret);
 }
 
-Coord getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length]) {
+void getCoordsPotentialWhole(Uint32 color, Uint32 potentialWhole[][whole0Length], Coord *ret) {
   int i = 0;
   int j = 0;
-  Coord c2;
   for (i = 0; i < wholeLength; ++i) {
     for (j = 0; j < whole0Length; ++j) {
       if(potentialWhole[i][j] == color){ 
-        Coord c;
-        c.row = i;
-        c.col = j;
-        return c;
+        ret->row = i;
+        ret->col = j;
+        return;
       }
     }
   }
 
   /*TODO jminer*/
-  c2.row = -1;
-  c2.col = -1;
-  return c2;
+  ret->row = -1;
+  ret->col = -1;
 }
 
-Coord getPotentialCoords(const Coord *coords, int clockDirection) {
+void getPotentialCoords(const Coord *coords, int clockDirection, Coord *ret) {
   int y = coords->row;
   int x = coords->col;
-  Coord c;
 
   if (clockDirection == 12)
     y -= 1;
@@ -1209,9 +1214,8 @@ Coord getPotentialCoords(const Coord *coords, int clockDirection) {
   if (x < 0 || x >= whole0Length)
     x = -1;
 
-  c.row = y;
-  c.col = x;
-  return c;
+  ret->row = y;
+  ret->col = x;
 }
 
 int inCorridor1(const Coord *coords, Uint32 wholeEx[][whole0Length], const Coord *wholeExCoords) {
@@ -1237,7 +1241,8 @@ int inCorridor1(const Coord *coords, Uint32 wholeEx[][whole0Length], const Coord
 }
 
 int inCorridor2(Uint32 color, Uint32 wholeEx[][whole0Length], const Coord *wholeExCoords) {
-  Coord c = getCoords(color);
+  Coord c;
+  getCoords(color, &c);
   return inCorridor1(&c, wholeEx, wholeExCoords);
 }
 
@@ -1660,10 +1665,11 @@ void proc(Uint32 interval) {
   }
 }
 
-Coord randomColorMe(Uint32 potentialWhole[][whole0Length]) {
+void randomColorMe(Uint32 potentialWhole[][whole0Length], Coord *ret) {
   int size=0;
   int i = 0;
   int j = 0;
+  int r;
   Coord colorMes[169]; /* wholeLength * whole0Length 13*13;*/
   for (i = 0; i < wholeLength; ++i) {
     for (j = 0; j < whole0Length; ++j) {
@@ -1673,7 +1679,9 @@ Coord randomColorMe(Uint32 potentialWhole[][whole0Length]) {
       }
     }
   }
-  return colorMes[randomRange(0, size - 1)];
+  r  = randomRange(0, size - 1);
+  ret->row = colorMes[r].row;
+  ret->col = colorMes[r].col;
 }
 
 int randomRange(int min, int max) {
@@ -1715,7 +1723,7 @@ void renderBoard() {
       /*ctx.fillRect(j * blockwidth, i * blockwidth, blockwidth - 1, blockwidth - 1);*/
     }
   }
-  shadowcoord = shadow(whole, &wholecoord);
+  shadow(whole, &wholecoord, &shadowcoord);
   for (i = 0; i < wholeLength; ++i) {
     for (j = 0; j < whole0Length; ++j) {
       if(arrayHas2(blockcolors, 10, whole[i][j])){ /*TODO hardcoded*/
@@ -1841,28 +1849,26 @@ void rotateWhole(int cwTrueCcwFalse) {
   }
 }
 
-Coord shadow(Uint32 wholeCoords[][whole0Length], const Coord *coords) {
+void shadow(Uint32 wholeCoords[][whole0Length], const Coord *coords, Coord *ret) {
   int i = 0;
   int j = 0;
   int loop = 1;
   Uint32 clone[wholeLength][whole0Length];
-  Coord ret;
   cloneWhole(wholeCoords, clone);
-  ret.row = coords->row;
-  ret.col = coords->col;
+  ret->row = coords->row;
+  ret->col = coords->col;
   loop = 1;
   while(loop == 1) {
-    ret.row++;
+    ret->row++;
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
-        if (clone[i][j] != bgcolor && (board[i + ret.row][j + ret.col] == 1 || (i + ret.row) >= boardLength)) {
-          ret.row--;
+        if (clone[i][j] != bgcolor && (board[i + ret->row][j + ret->col] == 1 || (i + ret->row) >= boardLength)) {
+          ret->row--;
           loop = 0;
         }
       }
     }
   } 
-  return ret;
 }
 
 void shiftWhole(Uint32 target[][whole0Length], int clockDirection, int translate) {
