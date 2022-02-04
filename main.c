@@ -452,8 +452,8 @@ void centerWhole(Uint32 target[][whole0Length], int translate) {
         center.row++;
       }
     }
-    else if (center.row + 1 > 6) {
-      while (center.row + 1 > 6) {
+    else if (center.row > 5) {
+      while (center.row > 5) {
         shiftWhole(target, 12, translate);
         center.row--;
       }
@@ -480,8 +480,8 @@ void centerWhole(Uint32 target[][whole0Length], int translate) {
         center.col++;
       }
     }
-    else if (center.col + 1 > 6) {
-      while (center.col + 1 > 6) {
+    else if (center.col > 5) {
+      while (center.col > 5) {
         shiftWhole(target, 9, translate);
         center.col--;
       }
@@ -803,13 +803,13 @@ int contiguous(const Coord *startingCoord, Uint32 potential[][whole0Length]) {
       s[sf++] = m;
     x=m/wholeLength; /* This is actually y */
     y=m%wholeLength; /* This is actually x */
-    if(x-1>=0&&potential[x-1][y]!=bgcolor&&arrayHas1(s,sf,m-wholeLength)==0)
+    if(x>=1&&potential[x-1][y]!=bgcolor&&arrayHas1(s,sf,m-wholeLength)==0)
       l[lf++]=m-wholeLength;
-    if(x+1<wholeLength&&potential[x+1][y]!=bgcolor&&arrayHas1(s,sf,m+wholeLength)==0)
+    if(x<wholeLength-1&&potential[x+1][y]!=bgcolor&&arrayHas1(s,sf,m+wholeLength)==0)
       l[lf++] = m+wholeLength;
-    if(y-1>=0&&potential[x][y-1]!=bgcolor&&arrayHas1(s,sf,m-1)==0)
+    if(y>=1&&potential[x][y-1]!=bgcolor&&arrayHas1(s,sf,m-1)==0)
       l[lf++]=m-1;
-    if(y+1<wholeLength&&potential[x][y+1]!=bgcolor&&arrayHas1(s,sf,m+1)==0)
+    if(y<wholeLength-1&&potential[x][y+1]!=bgcolor&&arrayHas1(s,sf,m+1)==0)
       l[lf++]=m+1;
   } while(lf>0);
 
@@ -1871,7 +1871,7 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, int translate
   if (clockDirection == 12) {
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
-        if (i + 1 < wholeLength) {
+        if (i < wholeLength - 1) {
           target[i][j] = target[i+1][j];
         }
         else {
@@ -1885,7 +1885,7 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, int translate
   if (clockDirection == 6) {
     for (i = wholeLength- 1; i >= 0; --i) {
       for (j = 0; j < whole0Length; ++j) {
-        if (i - 1 >= 0) {
+        if (i >= 1) {
           target[i][j] = target[i-1][j];
         }
         else {
@@ -1899,7 +1899,7 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, int translate
   if (clockDirection == 3) {
     for (i = 0; i < wholeLength; ++i) {
       for (j = whole0Length - 1; j >= 0; --j) {
-        if (j - 1 >= 0) {
+        if (j >= 1) {
           target[i][j] = target[i][j - 1];
         }
         else {
@@ -1913,7 +1913,7 @@ void shiftWhole(Uint32 target[][whole0Length], int clockDirection, int translate
   if (clockDirection == 9) {
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
-        if (j + 1 < whole0Length) {
+        if (j < whole0Length - 1) {
           target[i][j] = target[i][j + 1];
         }
         else {
@@ -1977,7 +1977,7 @@ int main(int argc, char **argv) {
   SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
   SDL_RenderSetLogicalSize(renderer, 1824, 984);
   boardCoord.col = 1824 / 2 - board0Length * blockwidth / 2;
-  boardCoord.row = 984 / 2 - boardLength * blockwidth / 2;
+  boardCoord.row = 984 / 2 - boardLength * (blockwidth / 2);
   redTexture = IMG_LoadTexture(renderer, "./graphics/Q.png");
   orangeTexture = IMG_LoadTexture(renderer, "./graphics/R.png");
   yellowTexture = IMG_LoadTexture(renderer, "./graphics/B.png");
