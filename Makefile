@@ -26,7 +26,7 @@ endif
 .PHONY: all clean
 all: post-build
 
-debug-mode: CC_FLAGS += -DDEBUG_MODE
+debug-mode: CC_FLAGS += -ggdb -DDEBUG_MODE
 debug-mode: all
 
 pre-build:
