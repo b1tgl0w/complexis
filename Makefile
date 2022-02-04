@@ -15,12 +15,12 @@ else
 endif
 CC := gcc
 ifeq ($(MAKELEVEL),0)
-export CC_FLAGS = -DPLATFORM_PC -ferror-limit=300 -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wctor-dtor-privacy -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wold-style-cast -Woverloaded-virtual -Wredundant-decls -Wshadow -Wsign-conversion -Wsign-promo -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wuninitialized
+export CC_FLAGS = -DPLATFORM_PC -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wsign-conversion -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wuninitialized
 endif
 
 ifeq ($(UNAME),Darwin)
 else
-  export CC_FLAGS += -Wlogical-op -Wnoexcept -Wstrict-null-sentinel -Wmaybe-uninitialized
+  export CC_FLAGS += -Wlogical-op -Wmaybe-uninitialized
 endif
 
 .PHONY: all clean
