@@ -17,6 +17,12 @@ CC := gcc
 ifeq ($(MAKELEVEL),0)
 export CC_FLAGS = -DPLATFORM_PC -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wcast-qual -Wdisabled-optimization -Wformat=2 -Winit-self -Wmissing-declarations -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wsign-conversion -Wstrict-overflow=5 -Wswitch-default -Wundef -Wno-unused -Wuninitialized
 endif
+ifdef ASANMODE
+CC_FLAGS += -ggdb -fno-omit-frame-pointer -fsanitize=undefined -fno-common -O0
+EXTRA_LD := -lasan -lSDL2 -lSDL2main -lSDL2_gfx -lSDL2_mixer -lSDL2_image -lSDL2_net -lpthread -ldl -lm
+else
+EXTRA_LD := -lSDL2 -lSDL2main -lSDL2_gfx -lSDL2_mixer -lSDL2_image -lSDL2_net -lpthread -ldl -lm
+endif
 
 ifeq ($(UNAME),Darwin)
 else
@@ -28,6 +34,9 @@ all: post-build
 
 debug-mode: CC_FLAGS += -ggdb -DDEBUG_MODE
 debug-mode: all
+
+asanmode: 
+	$(MAKE) ASANMODE=1
 
 pre-build:
 	@echo PREBUILD
@@ -41,12 +50,8 @@ main-build: pre-build
 
 main-target: obj/complexis
 
-#$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -lSDL2 -lSDL2_gfx -lSDL2_image
-#$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -Wl,-Bstatic /home/cy/elib/lib/libSDL2.a /home/cy/elib/lib/libSDL2main.a /home/cy/elib/lib/libSDL2_image.a -Wl,-Bdynamic -lpthread -ldl -lm
-
 obj/complexis: obj/main.o
-	$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -lSDL2 -lSDL2_gfx -lSDL2_image -lpthread -ldl -lm
-	#$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis -Wl,-Bstatic /home/cy/elib/lib/libSDL2.a /home/cy/elib/lib/libSDL2main.a /home/cy/elib/lib/libSDL2_image.a -Wl,-Bdynamic -lpthread -ldl -lm
+	$(ENVP) $(CC) $(CC_FLAGS) obj/main.o -o obj/complexis $(EXTRA_LD)
 
 obj/main.o: main.c
 	$(ENVP) $(CC) $(CC_FLAGS) -c main.c -o obj/main.o
