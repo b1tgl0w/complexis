@@ -75,7 +75,7 @@ SDL_Texture *blueTexture;
 Uint32 blue = 0xff579eff;
 #endif
 int blueInCorridor = 0;
-Coord boardCoord;
+Coord boardCoord = { 0, 0 };
 #ifdef PLATFORM_PC
 #define boardLength 34
 #define board0Length 19
@@ -156,7 +156,7 @@ off_t samplePaOffset;
 SDL_Window *screen;
 #endif
 Uint32 updateInterval = 12;
-Coord wholecoord;
+Coord wholecoord = { 0, 0 };
 #define wholeLength 13
 #define whole0Length 13
 Uint32 whole[wholeLength][whole0Length] = {
@@ -420,8 +420,8 @@ void capitalizeRows() {
 }
 
 void centerWhole(Uint32 target[][whole0Length], int translate) {
-  Coord center;
-  Bounds b;
+  Coord center = { 0, 0 };
+  Bounds b = { 0, 0, 0, 0 };
   int evenVert = 0;
   int evenHoriz = 0;
   getCenterCoords(target, &center);
@@ -491,26 +491,26 @@ void centerWhole(Uint32 target[][whole0Length], int translate) {
 
 void clockMove(Uint32 color, int cwTrueCcwFalse) {
   Uint32 state = 0;
-  Coord curCoords;
-  Coord newCoords[clockDirectionsLength];
-  int newCoordsDirection[clockDirectionsLength];
+  Coord curCoords = { 0, 0 };
+  Coord newCoords[clockDirectionsLength] = { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 }  } ;
+  int newCoordsDirection[clockDirectionsLength] = { 0, 0, 0, 0, 0, 0, 0, 0 } ;
   int newCoordsLastIndex = 0;
   int newCoordsAdded = 0;
   int i = 0;
   int j = 0;
   int k = 0;
-  Coord adjCoords[4];
-  Coord step1;
-  Coord potentialCoords;
-  Coord potentialCoordsDiag;
+  Coord adjCoords[4] = { { 0, 0 }, { 0, 0 }, { 0, 0 }, { 0, 0 } };
+  Coord step1 = { 0, 0 };
+  Coord potentialCoords = { 0, 0 };
+  Coord potentialCoordsDiag = { 0, 0 };
   Uint32 potentialWhole[wholeLength][whole0Length];
   Uint32 potentialWholeDiag[wholeLength][whole0Length];
   Uint32 step1Whole[wholeLength][whole0Length];
   int numAdj = 0;
   int adjCountRemaining = numAdj;
-  Coord newCoordsX;
+  Coord newCoordsX = { 0, 0 };
   Uint32 beforeWhole[wholeLength][whole0Length];
-  int finalClockDirection = -1;
+  int finalClockDirection = 0;
   int clockDirection;
   int clockDirectionDiag;
   int invalidMove = 0;
@@ -596,19 +596,19 @@ void clockMove(Uint32 color, int cwTrueCcwFalse) {
       invalidMove = 0;
       i = numAdj - adjCountRemaining;
       --adjCountRemaining;
-      clockDirection = getClockDirection(&adjCoords[i], &curCoords);
+      clockDirection = getClockDirection(&(adjCoords[i]), &curCoords);
       if (clockDirection == -1)
         invalidMove = 1;
       cw = clockwise(cwTrueCcwFalse, clockDirection);
       cw2 = clockwise(cwTrueCcwFalse, cw);
       if (cw == -1 || cw2 == -1)
         invalidMove = 1;
-      getPotentialCoords(&adjCoords[i], cw, &step1);
+      getPotentialCoords(&(adjCoords[i]), cw, &step1);
       if (step1.row == -1 || step1.col == -1)
         invalidMove = 1;
       cloneWhole(whole, step1Whole); /*TODO array copy*/
       step1Whole[curCoords.row][curCoords.col] = bgcolor;
-      getPotentialCoords(&adjCoords[i], cw2, &potentialCoords);
+      getPotentialCoords(&(adjCoords[i]), cw2, &potentialCoords);
       if (potentialCoords.row == -1 || potentialCoords.col == -1)
         invalidMove = 1;
       cloneWhole(whole, potentialWhole); /*TODO array copy*/
@@ -740,8 +740,8 @@ void colorWhole() {
   int colorindex = 0;
   int numViolet = rand() % 3 + 2;
   /*int numViolet = 3;  TODO debug remove*/
-  Coord r1;
-  Coord r2;
+  Coord r1 = { 0, 0 };
+  Coord r2 = { 0, 0 };
   randomColorMe(whole, &r1);
   randomColorMe(whole, &r2);
   /*Coord r3 = randomColorMe(whole); TODO debug remove*/
@@ -751,12 +751,12 @@ void colorWhole() {
   whole[r1.row][r1.col] = violet1;
   whole[r2.row][r2.col] = violet2;
   if(numViolet > 2) {
-    Coord r3;
+    Coord r3 = { 0, 0 };
     randomColorMe(whole, &r3);
     whole[r3.row][r3.col] = violet3;
   }
   if(numViolet > 3) {
-    Coord r4;
+    Coord r4 = { 0, 0 };
     randomColorMe(whole, &r4);
     whole[r4.row][r4.col] = violet4;
   }
@@ -771,11 +771,11 @@ void colorWhole() {
 
 void colorsInCorridor(Uint32 potentialWhole[][whole0Length], const Coord *potentialWholeCoords,
   int *r, int *o, int *y, int *g, int *b) {
-  Coord redCoords;
-  Coord orangeCoords; 
-  Coord yellowCoords;
-  Coord greenCoords;
-  Coord blueCoords;
+  Coord redCoords = { 0, 0 };
+  Coord orangeCoords = { 0, 0 }; 
+  Coord yellowCoords = { 0, 0 };
+  Coord greenCoords = { 0, 0 };
+  Coord blueCoords = { 0, 0 };
   getCoordsPotentialWhole(red, potentialWhole, &redCoords); 
   getCoordsPotentialWhole(orange, potentialWhole, &orangeCoords); 
   getCoordsPotentialWhole(yellow, potentialWhole, &yellowCoords);
@@ -1089,10 +1089,10 @@ void drawSquare(int x1, int y1, int x2, int y2, Uint32 color, int depth) {
 
 int getAdjOccupied(Coord coords, Coord adj[]) {
   int idx=0;
-  Coord c1;
-  Coord c2;
-  Coord c3;
-  Coord c4;
+  Coord c1 = { 0, 0 };
+  Coord c2 = { 0, 0 };
+  Coord c3 = { 0, 0 };
+  Coord c4 = { 0, 0 };
   c1.row = coords.row - 1;
   c1.col = coords.col;
   c2.row = coords.row + 1;
@@ -1121,7 +1121,7 @@ int getAdjOccupied(Coord coords, Coord adj[]) {
 }
 
 void getCenterCoords(Uint32 target[][whole0Length], Coord *ret) {
-  Bounds b;
+  Bounds b = { 0, 0, 0, 0 };
   bounds(target, &b);
   ret->row = (int)(((b.bottom - b.top) / 2 + b.top));
   ret->col = (int)(((b.right - b.left) / 2 + b.left));
@@ -1219,10 +1219,10 @@ void getPotentialCoords(const Coord *coords, int clockDirection, Coord *ret) {
 }
 
 int inCorridor1(const Coord *coords, Uint32 wholeEx[][whole0Length], const Coord *wholeExCoords) {
-  Coord coordsA;
-  Coord coordsB;
-  Coord coordsC;
-  Coord coordsD;
+  Coord coordsA = { 0, 0 };
+  Coord coordsB = { 0, 0 };
+  Coord coordsC = { 0, 0 };
+  Coord coordsD = { 0, 0 };
   coordsA.row = coords->row;
   coordsA.col = coords->col - 1;
   coordsB.row = coords->row;
@@ -1241,7 +1241,7 @@ int inCorridor1(const Coord *coords, Uint32 wholeEx[][whole0Length], const Coord
 }
 
 int inCorridor2(Uint32 color, Uint32 wholeEx[][whole0Length], const Coord *wholeExCoords) {
-  Coord c;
+  Coord c = { 0, 0 };
   getCoords(color, &c);
   return inCorridor1(&c, wholeEx, wholeExCoords);
 }
@@ -1557,7 +1557,7 @@ void proc(Uint32 interval) {
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
         if (whole[i][j] != bgcolor) {
-          Coord c1;
+          Coord c1 = { 0, 0 };
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
           c1.row = i;
@@ -1575,7 +1575,7 @@ void proc(Uint32 interval) {
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
         if (whole[i][j] != bgcolor) {
-          Coord c2;
+          Coord c2 = { 0, 0 };
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
           c2.row = i;
@@ -1597,7 +1597,7 @@ void proc(Uint32 interval) {
         for (j = 0; j < whole0Length; ++j) {
           if (whole[i][j] != bgcolor) {
             Uint32 color = whole[i][j];
-            Coord c3;
+            Coord c3 = { 0, 0 };
             c3.row = i;
             c3.col = j;
             whole[i][j] = bgcolor;
@@ -1619,7 +1619,7 @@ void proc(Uint32 interval) {
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
         if (whole[i][j] != bgcolor) {
-          Coord c4;
+          Coord c4 = { 0, 0 };
           Uint32 color = whole[i][j];
           whole[i][j] = bgcolor;
           c4.row = i;
@@ -1642,7 +1642,7 @@ void proc(Uint32 interval) {
       for (i = 0; i < wholeLength; ++i) {
         for (j = 0; j < whole0Length; ++j) {
           if (whole[i][j] != bgcolor) {
-            Coord c5;
+            Coord c5 = { 0, 0 };
             Uint32 color = whole[i][j];
             whole[i][j] = bgcolor;
             c5.row = i;
@@ -1671,6 +1671,10 @@ void randomColorMe(Uint32 potentialWhole[][whole0Length], Coord *ret) {
   int j = 0;
   int r;
   Coord colorMes[169]; /* wholeLength * whole0Length 13*13;*/
+  for (i = 0; i < 169; ++i) {
+    colorMes[i].row = 0;
+    colorMes[i].col = 0;
+  }
   for (i = 0; i < wholeLength; ++i) {
     for (j = 0; j < whole0Length; ++j) {
       if (potentialWhole[i][j] == colorme) {
@@ -1693,7 +1697,7 @@ void renderBoard() {
  int j = 0;
  SDL_Texture *texture;
  SDL_Rect dstRect;
- Coord shadowcoord;
+ Coord shadowcoord = { 0, 0 };
  int boxX;
  int boxY;
  int full = 1;
@@ -1829,7 +1833,7 @@ void rotateWhole(int cwTrueCcwFalse) {
 
   for (i = 0; i < wholeLength; ++i) {
     for (j = 0; j < whole0Length; ++j) {
-      Coord c1;
+      Coord c1 = { 0, 0 };
       c1.row = i;
       c1.col = j;
       if (potentialWhole[i][j] != bgcolor
