@@ -46,14 +46,6 @@ typedef unsigned int Uint32; /*TODO For now*/
 #include <dc/pvr.h>
 #endif
 
-typedef struct Bounds Bounds;
-struct Bounds {
-  int left;
-  int right;
-  int top;
-  int bottom;
-};
-
 #define bgcolor 0xffdddddd
 #ifdef PLATFORM_PC
 const int blockwidth = 25;
@@ -200,7 +192,7 @@ int arrayHas1(int a[], int size, int search);
 int arrayHas2(Uint32 ar[], int size, Uint32 element);
 void atExitQuit();
 int betterCorridorExit(int cwTrueCcwFalse, int directionA, int directionB, Uint32 color);
-void bounds(Uint32 target[][whole0Length], Bounds *ret);
+void bounds(Uint32 target[][whole0Length], int *retLeft, int *retRight, int *retTop, int *retBottom);
 #ifdef PLATFORM_DC
 void boxColor(...);
 #endif /* PLATFORM_DC */
@@ -360,7 +352,7 @@ int betterCorridorExit(int cwTrueCcwFalse, int directionA, int directionB, Uint3
   return (directionACloseness < directionBCloseness) ? directionA : directionB;
 }
 
-void bounds(Uint32 target[][whole0Length], Bounds *ret) {
+void bounds(Uint32 target[][whole0Length], int *retLeft, int *retRight, int *retTop, int *retBottom) {
   int minx = 999;
   int maxx = -1;
   int miny = 999;
@@ -382,10 +374,10 @@ void bounds(Uint32 target[][whole0Length], Bounds *ret) {
     }
   }
   
-  ret->left = minx;
-  ret->right = maxx;
-  ret->top = miny;
-  ret->bottom = maxy;
+  *retLeft = minx;
+  *retRight = maxx;
+  *retTop = miny;
+  *retBottom = maxy;
 }
 
 #ifdef PLATFORM_DC
@@ -423,14 +415,17 @@ void capitalizeRows() {
 void centerWhole(Uint32 target[][whole0Length], int translate) {
   int centerRow = 0;
   int centerCol = 0;
-  Bounds b = { 0, 0, 0, 0 };
+  int bLeft = 0;
+  int bRight = 0;
+  int bTop = 0;
+  int bBottom = 0;
   int evenVert = 0;
   int evenHoriz = 0;
   getCenterCoords(target, &centerRow, &centerCol);
-  bounds(target, &b);
-  if ((b.bottom - b.top) % 2 == 1)
+  bounds(target, &bLeft, &bRight, &bTop, &bBottom);
+  if ((bBottom - bTop) % 2 == 1)
     evenVert = 1;
-  if ((b.right - b.left) % 2 == 1)
+  if ((bRight - bLeft) % 2 == 1)
     evenHoriz = 1;
 
   if (evenVert == 0) {
@@ -1148,10 +1143,13 @@ int getAdjOccupied(int row, int col, int adjRow[], int adjCol[]) {
 }
 
 void getCenterCoords(Uint32 target[][whole0Length], int *retRow, int *retCol) {
-  Bounds b = { 0, 0, 0, 0 };
-  bounds(target, &b);
-  *retRow = (int)(((b.bottom - b.top) / 2 + b.top));
-  *retCol = (int)(((b.right - b.left) / 2 + b.left));
+  int bLeft = 0;
+  int bRight = 0;
+  int bTop = 0;
+  int bBottom = 0;
+  bounds(target, &bLeft, &bRight, &bTop, &bBottom);
+  *retRow = (int)(((bBottom - bTop) / 2 + bTop));
+  *retCol = (int)(((bRight - bLeft) / 2 + bLeft));
 }
 
 int getClockDirection(int centerRow, int centerCol, int dRow, int dCol) {
