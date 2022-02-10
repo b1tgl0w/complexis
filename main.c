@@ -685,8 +685,11 @@ void clockMove(Uint32 color, int cwTrueCcwFalse) {
   /*printf("\n\n\n"); TODO DEBUG */
 
   cloneWhole(whole, beforeWhole);
-  whole[curCoords.row][curCoords.col] = bgcolor;
-  whole[newCoordsX.row][newCoordsX.col] = color;
+  if (curCoords.row > -1 && curCoords.col > -1)
+    whole[curCoords.row][curCoords.col] = bgcolor;
+
+  if (newCoordsX.row > -1 && newCoordsX.col > -1)
+    whole[newCoordsX.row][newCoordsX.col] = color;
 
   finalClockDirection = getClockDirection(&curCoords, &newCoordsX);
   corridorClocks2(beforeWhole, whole, &wholecoord, &wholecoord, color, finalClockDirection, cwTrueCcwFalse);
@@ -1866,7 +1869,7 @@ void shadow(Uint32 wholeCoords[][whole0Length], const Coord *coords, Coord *ret)
     ret->row++;
     for (i = 0; i < wholeLength; ++i) {
       for (j = 0; j < whole0Length; ++j) {
-        if (clone[i][j] != bgcolor && (board[i + ret->row][j + ret->col] == 1 || (i + ret->row) >= boardLength)) {
+        if (clone[i][j] != bgcolor && ((i + ret->row) >= boardLength || board[i + ret->row][j + ret->col] == 1)) {
           ret->row--;
           loop = 0;
         }
