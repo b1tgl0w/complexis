@@ -143,6 +143,7 @@ off_t samplePaOffset;
 SDL_Window *screen;
 #endif
 Uint32 updateInterval = 12;
+SDL_TimerID updateTimerId = 0;
 int wholeRow;
 int wholeCol;
 #define wholeLength 13
@@ -278,6 +279,8 @@ int arrayHas2(Uint32 ar[], int size, Uint32 element) {
 
 void atExitQuit() {
   /* TODO other stuff */
+  if (updateTimerId > 0)
+    SDL_RemoveTimer(updateTimerId);
   SDL_DestroyTexture(redTexture);
   SDL_DestroyTexture(orangeTexture);
   SDL_DestroyTexture(yellowTexture);
@@ -2071,7 +2074,7 @@ int main(int argc, char **argv) {
   newWhole(whole);
   colorWhole();
 #ifdef PLATFORM_PC
-  SDL_AddTimer(updateInterval, update, &noParam);
+  updateTimerId = SDL_AddTimer(updateInterval, update, &noParam);
   while(1)
     keyboard();
 #endif
