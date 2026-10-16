@@ -1,6 +1,0 @@
-* Initialize all variables at declaration.
-* Add volatile variable writes to loops to prevent optimization by present or future compilers
-* corridorClocks on translating and rotating whole
-* Check all if statements using if (someobject) to check that it's not
-undefined.
-* Blocks can reach outside the array. What I mean is, they can stack on top of each other, higher and higher until they're outside of whole's bounds.
