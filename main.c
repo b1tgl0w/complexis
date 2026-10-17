@@ -1301,7 +1301,11 @@ int isOpen(int pieceRow, Sint32 pieceCol, Uint32 potentialWhole[][whole0Length],
 void keyboard() {
 #ifdef PLATFORM_PC
   const Uint8 *state;
+  SDL_Event e;
   SDL_PumpEvents();
+  SDL_PollEvent(&e);
+  if (e.type == SDL_QUIT)
+    exit(0);
   state =
     SDL_GetKeyboardState(NULL);
   if(state[SDL_SCANCODE_ESCAPE])
