@@ -33,6 +33,7 @@ typedef unsigned Sint32 Uint32; /*TODO For now*/
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -86,6 +87,7 @@ int corridorClockRedCw = -1;
 int corridorClockRedCcw = -1;
 int corridorClockYellowCw = -1;
 int corridorClockYellowCcw = -1;
+Uint32 curTicks;
 const Sint32 gravityTimeout = 2750;
 int gravityTimer = gravityTimeout;
 Uint32 gray1 = 0xfffd66c0; /* This is violet, now, not gray, make sure not same value as other violets for game mechanics */
@@ -100,6 +102,7 @@ Uint32 green = 0xff76ff67;
 int greenInCorridor = 0;
 Uint32 keystate = 0;
 Uint32 keystateprev = 0;
+Uint32 lastTicks;
 const Sint32 moveTimeout = 144;
 int moveTimerRed = moveTimeout;
 int moveTimerOrange = moveTimeout;
@@ -142,8 +145,6 @@ off_t samplePaOffset;
 #ifdef PLATFORM_PC
 SDL_Window *screen;
 #endif
-Uint32 updateInterval = 12;
-SDL_TimerID updateTimerId = 0;
 int wholeRow;
 int wholeCol;
 #define wholeLength 13
@@ -245,7 +246,7 @@ void rotateWhole(int cwTrueCcwFalse);
 void shadow(Uint32 wholeCoords[][whole0Length], Sint32 wholeRow, Sint32 wholeCol,
   Sint32 *retRow, Sint32 *retCol); 
 void shiftWhole(Uint32 target[][whole0Length], Sint32 clockDirection, Sint32 translate);
-Uint32 update(Uint32 interval, void *param);
+void update(Uint32 interval);
 
 int absoluteValue(int a) {
   if (a < 0)
@@ -279,8 +280,6 @@ int arrayHas2(Uint32 ar[], Sint32 size, Uint32 element) {
 
 void atExitQuit() {
   /* TODO other stuff */
-  if (updateTimerId > 0)
-    SDL_RemoveTimer(updateTimerId);
   SDL_DestroyTexture(redTexture);
   SDL_DestroyTexture(orangeTexture);
   SDL_DestroyTexture(yellowTexture);
@@ -1979,7 +1978,7 @@ void shiftWhole(Uint32 target[][whole0Length], Sint32 clockDirection, Sint32 tra
 }
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-Uint32 update(Uint32 interval, void *param) {
+void update(Uint32 interval) {
   moveTimerRed -= (int)(interval & 0x7fffffff);
   moveTimerOrange -= (int)(interval & 0x7fffffff);
   moveTimerYellow -= (int)(interval & 0x7fffffff);
@@ -2074,9 +2073,16 @@ int main(int argc, char **argv) {
   newWhole(whole);
   colorWhole();
 #ifdef PLATFORM_PC
-  updateTimerId = SDL_AddTimer(updateInterval, update, &noParam);
   while(1)
     keyboard();
+    lastTicks = curTicks;
+    curTicks = SDL_GetTicks();
+    if (curTicks - lastTicks > 200)
+      lastTicks = curTicks - 200;
+    if (curTicks >= lastTicks) /* Wraps every 43 days */
+      update(curTicks - lastTicks);
+    else
+      update(UINT_MAX - lastTicks + curTicks);
 #endif
 #ifdef PLATFORM_DC
     Sint32 unusedi = 0;
@@ -2086,12 +2092,15 @@ int main(int argc, char **argv) {
     uint32 lastTime = 0;
     uint32 elapsedTime = 0; /* TODO 64bit timer important */
     while(1) {
-      timer_ms_gettime(&nowSeconds, &nowMillis);
-      nowTime = nowSeconds * 1000 + nowMillis;
-      elapsedTime = nowTime - lastTime;
-      lastTime = nowTime;
+      lastTicks = curTicks;
+      curTicks = SDL_GetTicks();
+      if (curTicks - lastTicks > 200)
+        lastTicks = curTicks - 200;
+      if (curTicks >= lastTicks) /* Wraps every 43 days */
+        update(curTicks - lastTicks);
+      else
+        update(UINT_MAX - lastTicks + curTicks);
       controller();
-      update(elapsedTime, &unusedi);
       renderBoard();
     }
     pvr_get_stats(&stats);
