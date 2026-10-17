@@ -2002,7 +2002,6 @@ void update(Uint32 interval) {
   }
   keystateprev = keystate;
   controllerstateprev = controllerstate;
-  return interval;
 }
 #pragma GCC diagnostic pop
 
