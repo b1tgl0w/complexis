@@ -2021,7 +2021,7 @@ int main(int argc, char **argv) {
   SDL_Init(SDL_INIT_VIDEO);
   IMG_Init(IMG_INIT_PNG);
   atexit(atExitQuit);
-  screen = SDL_CreateWindow("My Game Window", SDL_WINDOWPOS_UNDEFINED,
+  screen = SDL_CreateWindow("complexis", SDL_WINDOWPOS_UNDEFINED,
     SDL_WINDOWPOS_UNDEFINED, 0, 0, SDL_WINDOW_FULLSCREEN_DESKTOP);
   /* TODO if (screen == null) */
   renderer = SDL_CreateRenderer(screen, -1, 0);
