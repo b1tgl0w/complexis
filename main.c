@@ -134,8 +134,8 @@ Uint32 red = 0xffff5757;
 #ifdef PLATFORM_PC
 SDL_Renderer *renderer;
 #endif
-#define renderTimeout 12 
-int renderTimer = renderTimeout;
+Uint32 renderTimeout = 12;
+int renderTimer = 12;
 char *sampleAddr;
 struct stat sampleSb;
 int sampleFd;
@@ -1300,14 +1300,13 @@ int isOpen(int pieceRow, Sint32 pieceCol, Uint32 potentialWhole[][whole0Length],
 
 void keyboard() {
 #ifdef PLATFORM_PC
-  const Uint8 *state;
+  const Uint8 *state = NULL;
   SDL_Event e;
   SDL_PumpEvents();
   SDL_PollEvent(&e);
   if (e.type == SDL_QUIT)
     exit(0);
-  state =
-    SDL_GetKeyboardState(NULL);
+  state = SDL_GetKeyboardState(NULL);
   if(state[SDL_SCANCODE_ESCAPE])
     exit(0);
   if(state[SDL_SCANCODE_1])
@@ -2077,7 +2076,7 @@ int main(int argc, char **argv) {
   newWhole(whole);
   colorWhole();
 #ifdef PLATFORM_PC
-  while(1)
+  while(1) {
     keyboard();
     lastTicks = curTicks;
     curTicks = SDL_GetTicks();
@@ -2087,6 +2086,7 @@ int main(int argc, char **argv) {
       update(curTicks - lastTicks);
     else
       update(UINT_MAX - lastTicks + curTicks);
+  }
 #endif
 #ifdef PLATFORM_DC
     Sint32 unusedi = 0;
