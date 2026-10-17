@@ -41,6 +41,7 @@ asanmode:
 pre-build:
 	@echo PREBUILD
 	mkdir -p obj
+	cp -rp graphics obj
 
 post-build: main-build
 	@echo POSTBUILD
